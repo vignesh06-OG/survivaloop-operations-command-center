@@ -6,6 +6,7 @@ import { FALLBACK_TASK_COLOR, fmtAgo } from "@/lib/present";
 import type { TaskView } from "./TaskPipeline";
 import { useTranslation } from "@/lib/i18n/I18nContext";
 import LanguageSelector from "./LanguageSelector";
+import FieldAssistant from "./FieldAssistant";
 
 interface Me { id: string; name: string; email: string; role: string; orgId: string; dataMode: string }
 
@@ -84,6 +85,7 @@ function TaskDetail({ task, onBack, onRefresh }: { task: TaskView; onBack: () =>
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAssistant, setShowAssistant] = useState(false);
 
   const handleTransition = async (to: string) => {
     setBusy(true); setError(null);
@@ -100,12 +102,27 @@ function TaskDetail({ task, onBack, onRefresh }: { task: TaskView; onBack: () =>
   const isCompleted = task.state === "COMPLETED";
   const needsProof = task.state === "COMPLETED"; // proof can be submitted
   const isFinished = ["PROOF_SUBMITTED", "VERIFIED", "REJECTED", "EXPIRED", "CANCELLED"].includes(task.state);
+  const canUseAssistant = ["IN_PROGRESS", "COMPLETED"].includes(task.state);
+
+  // Fullscreen assistant overlay
+  if (showAssistant) {
+    return (
+      <div className="min-h-screen bg-black text-[#e6edf3] flex flex-col max-w-md mx-auto border-x border-[var(--line)]">
+        <FieldAssistant task={task} onRefresh={onRefresh} onClose={() => setShowAssistant(false)} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-[#e6edf3] flex flex-col max-w-md mx-auto border-x border-[var(--line)]">
       <header className="p-4 border-b border-[var(--line)] bg-[#0b0f14] sticky top-0 z-10 flex items-center gap-3">
         <button onClick={onBack} className="p-2 -ms-2 text-[var(--muted)] active:text-white rtl-flip">{t("field.back")}</button>
-        <h1 className="font-bold text-md truncate">{task.entity_id}</h1>
+        <h1 className="font-bold text-md truncate flex-1">{task.entity_id}</h1>
+        {canUseAssistant && (
+          <button onClick={() => setShowAssistant(true)} className="px-3 py-1.5 rounded-lg bg-[#1a232f] border border-[var(--line)] text-xs font-bold text-[#34d399] active:scale-95 transition-transform flex items-center gap-1.5" aria-label={t("ai.assistantTitle")}>
+            🤖 <span className="hidden sm:inline">{t("ai.assistantTitle")}</span>
+          </button>
+        )}
       </header>
 
       <div className="p-4 flex-1 overflow-y-auto pb-24">
@@ -161,6 +178,19 @@ function TaskDetail({ task, onBack, onRefresh }: { task: TaskView; onBack: () =>
           </div>
         )}
       </div>
+
+      {/* Floating AI Assistant button (visible when task is active but not yet showing assistant) */}
+      {canUseAssistant && (
+        <div className="fixed bottom-6 right-6 z-20 max-w-md" style={{ marginInlineEnd: "max(0px, calc(50vw - 14rem))" }}>
+          <button
+            onClick={() => setShowAssistant(true)}
+            className="w-14 h-14 rounded-full bg-[#10b981] text-white text-2xl shadow-[0_0_30px_rgba(16,185,129,0.4)] active:scale-90 transition-transform flex items-center justify-center"
+            aria-label={t("ai.assistantTitle")}
+          >
+            🤖
+          </button>
+        </div>
+      )}
     </div>
   );
 }

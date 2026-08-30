@@ -164,5 +164,17 @@
   "field.cameraDesc": "এই প্ৰমাণৰ সৈতে 1টা ফটো ৰেফাৰেন্স সংলগ্ন কৰা হ'ব।",
   "field.fieldNotes": "ফিল্ড টোকা",
   "field.describeOutcome": "ফলাফল বৰ্ণনা কৰক...",
-  "field.submitProof": "প্ৰমাণ দাখিল কৰক"
+  "field.submitProof": "প্ৰমাণ দাখিল কৰক",
+  "ai.assistantTitle": "AI ফিল্ড সহায়ক",
+  "ai.typeMessage": "এটা বাৰ্তা টাইপ কৰক...",
+  "ai.send": "পঠিয়াওক",
+  "ai.uploadRequested": "সহায়কৰ দ্বাৰা ফটো অনুৰোধ",
+  "ai.btnUpload": "ফটো লওক আৰু আপলোড কৰক",
+  "ai.reviewDraft": "ড্ৰাফ্ট ৰিপ'ৰ্ট পৰ্যালোচনা কৰক",
+  "ai.submitDraft": "পৰীক্ষিত প্ৰমাণ দাখিল কৰক",
+  "ai.cancel": "বাতিল কৰক",
+  "ai.draftTitle": "প্ৰমাণ ড্ৰাফ্ট",
+  "ai.draftNotes": "সৃষ্টি কৰা টোকা:",
+  "ai.draftPhotos": "সংলগ্ন ফটো:",
+  "ai.sysMessage": "AI সহায়কে আপোনাক তথ্য সংগ্ৰহ কৰাত আৰু ৰিপ'ৰ্ট ড্ৰাফ্ট কৰাত সহায় কৰিব পাৰে। সকলো পৰামৰ্শ কেৱল উপদেশমূলক।"
 }

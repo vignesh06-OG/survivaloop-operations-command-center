@@ -164,5 +164,17 @@
   "field.cameraDesc": "આ પુરાવા સાથે 1 ફોટો સંદર્ભ જોડવામાં આવશે.",
   "field.fieldNotes": "ફિલ્ડ નોંધો",
   "field.describeOutcome": "પરિણામ વર્ણવો...",
-  "field.submitProof": "પુરાવા સબમિટ કરો"
+  "field.submitProof": "પુરાવા સબમિટ કરો",
+  "ai.assistantTitle": "AI ફિલ્ડ સહાયક",
+  "ai.typeMessage": "એક સંદેશ ટાઈપ કરો...",
+  "ai.send": "મોકલો",
+  "ai.uploadRequested": "સહાયક દ્વારા ફોટોની વિનંતી",
+  "ai.btnUpload": "ફોટો લો અને અપલોડ કરો",
+  "ai.reviewDraft": "ડ્રાફ્ટ રિપોર્ટ સમીક્ષા કરો",
+  "ai.submitDraft": "ચકાસાયેલ પુરાવા સબમિટ કરો",
+  "ai.cancel": "રદ કરો",
+  "ai.draftTitle": "પુરાવા ડ્રાફ્ટ",
+  "ai.draftNotes": "ઉત્પન્ન નોંધો:",
+  "ai.draftPhotos": "જોડાયેલ ફોટા:",
+  "ai.sysMessage": "AI સહાયક તમને માહિતી એકત્ર કરવામાં અને રિપોર્ટ ડ્રાફ્ટ કરવામાં મદદ કરી શકે છે. બધા સૂચનો ફક્ત સલાહ છે."
 }

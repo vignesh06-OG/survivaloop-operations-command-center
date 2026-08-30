@@ -164,5 +164,17 @@
   "field.cameraDesc": "इस प्रमाण के साथ 1 फोटो संदर्भ संलग्न किया जाएगा।",
   "field.fieldNotes": "फील्ड नोट्स",
   "field.describeOutcome": "परिणाम का वर्णन करें...",
-  "field.submitProof": "प्रमाण सबमिट करें"
+  "field.submitProof": "प्रमाण सबमिट करें",
+  "ai.assistantTitle": "AI फील्ड सहायक",
+  "ai.typeMessage": "एक संदेश टाइप करें...",
+  "ai.send": "भेजें",
+  "ai.uploadRequested": "सहायक द्वारा फोटो का अनुरोध",
+  "ai.btnUpload": "फोटो लें और अपलोड करें",
+  "ai.reviewDraft": "ड्राफ्ट रिपोर्ट की समीक्षा करें",
+  "ai.submitDraft": "सत्यापित प्रमाण सबमिट करें",
+  "ai.cancel": "रद्द करें",
+  "ai.draftTitle": "प्रमाण ड्राफ्ट",
+  "ai.draftNotes": "उत्पन्न नोट्स:",
+  "ai.draftPhotos": "संलग्न तस्वीरें:",
+  "ai.sysMessage": "AI सहायक आपको जानकारी एकत्र करने और रिपोर्ट का मसौदा तैयार करने में मदद कर सकता है। सभी सुझाव केवल सलाहकारी हैं।"
 }

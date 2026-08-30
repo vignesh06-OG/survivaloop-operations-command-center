@@ -164,5 +164,17 @@
   "field.cameraDesc": "1টি ছবির তথ্য এই প্রমাণের সাথে সংযুক্ত করা হবে।",
   "field.fieldNotes": "মাঠের নোট",
   "field.describeOutcome": "ফলাফল বর্ণনা করুন...",
-  "field.submitProof": "প্রমাণ জমা দিন"
+  "field.submitProof": "প্রমাণ জমা দিন",
+  "ai.assistantTitle": "AI মাঠ সহায়ক",
+  "ai.typeMessage": "একটি বার্তা টাইপ করুন...",
+  "ai.send": "পাঠান",
+  "ai.uploadRequested": "সহায়ক দ্বারা ফটো অনুরোধ করা হয়েছে",
+  "ai.btnUpload": "ফটো নিন এবং আপলোড করুন",
+  "ai.reviewDraft": "ড্রাফট রিপোর্ট পর্যালোচনা করুন",
+  "ai.submitDraft": "যাচাইকৃত প্রমাণ জমা দিন",
+  "ai.cancel": "বাতিল করুন",
+  "ai.draftTitle": "প্রমাণ ড্রাফট",
+  "ai.draftNotes": "উৎপন্ন নোটস:",
+  "ai.draftPhotos": "সংযুক্ত ছবি:",
+  "ai.sysMessage": "AI সহায়ক আপনাকে তথ্য সংগ্রহ করতে এবং রিপোর্টের খসড়া তৈরি করতে সাহায্য করতে পারে। সমস্ত পরামর্শ শুধুমাত্র উপদেশমূলক।"
 }

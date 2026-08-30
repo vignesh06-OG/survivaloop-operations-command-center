@@ -164,5 +164,17 @@
   "field.cameraDesc": "या पुराव्याला १ फोटो संदर्भ जोडला जाईल.",
   "field.fieldNotes": "फील्ड नोट्स",
   "field.describeOutcome": "परिणामाचे वर्णन करा...",
-  "field.submitProof": "पुरावा सादर करा"
+  "field.submitProof": "पुरावा सादर करा",
+  "ai.assistantTitle": "AI फील्ड सहाय्यक",
+  "ai.typeMessage": "एक संदेश टाइप करा...",
+  "ai.send": "पाठवा",
+  "ai.uploadRequested": "सहाय्यकाने फोटोची विनंती केली",
+  "ai.btnUpload": "फोटो घ्या आणि अपलोड करा",
+  "ai.reviewDraft": "मसुदा अहवालाचे पुनरावलोकन करा",
+  "ai.submitDraft": "सत्यापित पुरावा सबमिट करा",
+  "ai.cancel": "रद्द करा",
+  "ai.draftTitle": "पुरावा मसुदा",
+  "ai.draftNotes": "व्युत्पन्न नोट्स:",
+  "ai.draftPhotos": "संलग्न फोटो:",
+  "ai.sysMessage": "AI सहाय्यक तुम्हाला माहिती गोळा करण्यात आणि अहवाल मसुदा तयार करण्यात मदत करू शकतो. सर्व सूचना केवळ सल्लागार आहेत."
 }

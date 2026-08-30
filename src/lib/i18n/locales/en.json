@@ -164,5 +164,17 @@
   "field.cameraDesc": "1 photo reference will be attached to this proof.",
   "field.fieldNotes": "Field Notes",
   "field.describeOutcome": "Describe the outcome...",
-  "field.submitProof": "SUBMIT PROOF"
+  "field.submitProof": "SUBMIT PROOF",
+  "ai.assistantTitle": "AI Field Assistant",
+  "ai.typeMessage": "Type a message...",
+  "ai.send": "Send",
+  "ai.uploadRequested": "Photo requested by Assistant",
+  "ai.btnUpload": "Take Photo & Upload",
+  "ai.reviewDraft": "Review Draft Report",
+  "ai.submitDraft": "Submit Verified Proof",
+  "ai.cancel": "Cancel",
+  "ai.draftTitle": "Draft Execution Proof",
+  "ai.draftNotes": "Generated Notes:",
+  "ai.draftPhotos": "Attached Photos:",
+  "ai.sysMessage": "AI assistant can help you collect information and draft the report. All suggestions are advisory only."
 }

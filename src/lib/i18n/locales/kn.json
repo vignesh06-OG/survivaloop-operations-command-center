@@ -164,5 +164,17 @@
   "field.cameraDesc": "ಈ ಪುರಾವೆಗೆ 1 ಫೋಟೋ ಉಲ್ಲೇಖವನ್ನು ಲಗತ್ತಿಸಲಾಗುತ್ತದೆ.",
   "field.fieldNotes": "ಕ್ಷೇತ್ರ ಟಿಪ್ಪಣಿಗಳು",
   "field.describeOutcome": "ಫಲಿತಾಂಶವನ್ನು ವಿವರಿಸಿ...",
-  "field.submitProof": "ಪುರಾವೆ ಸಲ್ಲಿಸಿ"
+  "field.submitProof": "ಪುರಾವೆ ಸಲ್ಲಿಸಿ",
+  "ai.assistantTitle": "AI ಕ್ಷೇತ್ರ ಸಹಾಯಕ",
+  "ai.typeMessage": "ಸಂದೇಶವನ್ನು ಟೈಪ್ ಮಾಡಿ...",
+  "ai.send": "ಕಳುಹಿಸಿ",
+  "ai.uploadRequested": "ಸಹಾಯಕರಿಂದ ಫೋಟೋ ವಿನಂತಿಸಲಾಗಿದೆ",
+  "ai.btnUpload": "ಫೋಟೋ ತೆಗೆದುಕೊಳ್ಳಿ ಮತ್ತು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ",
+  "ai.reviewDraft": "ಕರಡು ವರದಿಯನ್ನು ಪರಿಶೀಲಿಸಿ",
+  "ai.submitDraft": "ಪರಿಶೀಲಿತ ಪುರಾವೆ ಸಲ್ಲಿಸಿ",
+  "ai.cancel": "ರದ್ದುಮಾಡಿ",
+  "ai.draftTitle": "ಪುರಾವೆ ಕರಡು",
+  "ai.draftNotes": "ರಚಿಸಿದ ಟಿಪ್ಪಣಿಗಳು:",
+  "ai.draftPhotos": "ಲಗತ್ತಿಸಿದ ಫೋಟೋಗಳು:",
+  "ai.sysMessage": "AI ಸಹಾಯಕ ಮಾಹಿತಿ ಸಂಗ್ರಹಿಸಲು ಮತ್ತು ವರದಿ ಕರಡು ರಚಿಸಲು ನಿಮಗೆ ಸಹಾಯ ಮಾಡಬಹುದು. ಎಲ್ಲಾ ಸಲಹೆಗಳು ಸಲಹಾ ಮಾತ್ರ."
 }

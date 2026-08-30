@@ -164,5 +164,17 @@
   "field.cameraDesc": "اس ثبوت کے ساتھ 1 تصویر کا حوالہ منسلک کیا جائے گا۔",
   "field.fieldNotes": "فیلڈ نوٹس",
   "field.describeOutcome": "نتیجہ بیان کریں...",
-  "field.submitProof": "ثبوت جمع کرائیں"
+  "field.submitProof": "ثبوت جمع کرائیں",
+  "ai.assistantTitle": "AI فیلڈ اسسٹنٹ",
+  "ai.typeMessage": "ایک پیغام ٹائپ کریں...",
+  "ai.send": "بھیجیں",
+  "ai.uploadRequested": "اسسٹنٹ کی طرف سے تصویر کی درخواست",
+  "ai.btnUpload": "تصویر لیں اور اپ لوڈ کریں",
+  "ai.reviewDraft": "ڈرافٹ رپورٹ کا جائزہ لیں",
+  "ai.submitDraft": "تصدیق شدہ ثبوت جمع کریں",
+  "ai.cancel": "منسوخ کریں",
+  "ai.draftTitle": "ثبوت کا ڈرافٹ",
+  "ai.draftNotes": "تیار کردہ نوٹس:",
+  "ai.draftPhotos": "منسلک تصاویر:",
+  "ai.sysMessage": "AI اسسٹنٹ آپ کو معلومات جمع کرنے اور رپورٹ کا ڈرافٹ تیار کرنے میں مدد کر سکتا ہے۔ تمام تجاویز صرف مشاورتی ہیں۔"
 }

@@ -164,5 +164,17 @@
   "field.cameraDesc": "ਇਸ ਸਬੂਤ ਦੇ ਨਾਲ 1 ਫੋਟੋ ਹਵਾਲਾ ਨੱਥੀ ਕੀਤਾ ਜਾਵੇਗਾ।",
   "field.fieldNotes": "ਫੀਲਡ ਨੋਟਸ",
   "field.describeOutcome": "ਨਤੀਜੇ ਦਾ ਵਰਣਨ ਕਰੋ...",
-  "field.submitProof": "ਸਬੂਤ ਜਮ੍ਹਾਂ ਕਰੋ"
+  "field.submitProof": "ਸਬੂਤ ਜਮ੍ਹਾਂ ਕਰੋ",
+  "ai.assistantTitle": "AI ਫੀਲਡ ਸਹਾਇਕ",
+  "ai.typeMessage": "ਇੱਕ ਸੁਨੇਹਾ ਟਾਈਪ ਕਰੋ...",
+  "ai.send": "ਭੇਜੋ",
+  "ai.uploadRequested": "ਸਹਾਇਕ ਦੁਆਰਾ ਫੋਟੋ ਦੀ ਬੇਨਤੀ",
+  "ai.btnUpload": "ਫੋਟੋ ਲਓ ਅਤੇ ਅੱਪਲੋਡ ਕਰੋ",
+  "ai.reviewDraft": "ਡਰਾਫਟ ਰਿਪੋਰਟ ਦੀ ਸਮੀਖਿਆ ਕਰੋ",
+  "ai.submitDraft": "ਤਸਦੀਕਸ਼ੁਦਾ ਸਬੂਤ ਜਮ੍ਹਾਂ ਕਰੋ",
+  "ai.cancel": "ਰੱਦ ਕਰੋ",
+  "ai.draftTitle": "ਸਬੂਤ ਡਰਾਫਟ",
+  "ai.draftNotes": "ਤਿਆਰ ਕੀਤੇ ਨੋਟਸ:",
+  "ai.draftPhotos": "ਨੱਥੀ ਕੀਤੀਆਂ ਫੋਟੋਆਂ:",
+  "ai.sysMessage": "AI ਸਹਾਇਕ ਤੁਹਾਨੂੰ ਜਾਣਕਾਰੀ ਇਕੱਠੀ ਕਰਨ ਅਤੇ ਰਿਪੋਰਟ ਦਾ ਡਰਾਫਟ ਤਿਆਰ ਕਰਨ ਵਿੱਚ ਮਦਦ ਕਰ ਸਕਦਾ ਹੈ। ਸਾਰੇ ਸੁਝਾਅ ਸਿਰਫ਼ ਸਲਾਹ ਹਨ।"
 }
