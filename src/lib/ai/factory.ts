@@ -2,7 +2,7 @@ import type { AiProvider } from "./provider";
 import { MockAiProvider } from "./mockProvider";
 import { SafeAiProvider } from "./safeProvider";
 
-// Note: Future production providers (e.g., OpenAiProvider) will be imported here.
+import { OpenAiProvider } from "./openaiProvider";
 
 /**
  * Returns a production-ready, safely-wrapped AI provider based on
@@ -20,6 +20,8 @@ export function getProvider(): AiProvider {
 
   switch (providerType.toLowerCase()) {
     case "openai":
+      innerProvider = new OpenAiProvider();
+      break;
     case "anthropic":
       // In the future, instantiate the real API provider here.
       // For now, we only have the mock.
