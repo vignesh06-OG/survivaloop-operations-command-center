@@ -23,10 +23,12 @@ export default function CommandCenter() {
   const [clusters, setClusters] = useState<any[]>([]);
   const [zones, setZones] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [overrideModal, setOverrideModal] = useState<{ decisionId: string; decision: string; reason: string } | null>(null);
 
   const refresh = useCallback(async () => {
     const m = await api<{ user: Me | null }>("/api/auth/me");
     if (!m.user) { setMe(null); setLoading(false); return; }
+    if (m.user.role === "FIELD_WORKER") { window.location.href = "/field"; return; }
     setMe(m.user);
     const [o, ent, zs] = await Promise.all([
       api<any>("/api/oversight"),
@@ -159,17 +161,9 @@ export default function CommandCenter() {
                         try { await api("/api/decision", { method: "POST", body: { level: "MICRO_CLUSTER", id: selected } }); await onChanged(); }
                         catch (e) { setError((e as Error).message); }
                       }}>{t("btn.rerun")}</button>
-                      <button className="btn text-[11px] px-2 text-amber-500 border-amber-500/30 hover:bg-amber-500/10" title={t("btn.override")} onClick={async () => {
+                      <button className="btn text-[11px] px-2 text-amber-500 border-amber-500/30 hover:bg-amber-500/10" title={t("btn.override")} onClick={() => {
                         if (!detail?.latestDecision?.id) { setError("No decision to override."); return; }
-                        const newDecision = window.prompt("Enter new decision (ACT, DEFER, MONITOR, ESCALATE):", "DEFER");
-                        if (!newDecision) return;
-                        const reason = window.prompt("Reason for override:");
-                        if (!reason) return;
-                        setError(null);
-                        try {
-                          await api("/api/override", { method: "POST", body: { entity: { level: "MICRO_CLUSTER", id: selected }, decisionId: detail.latestDecision.id, humanDecision: newDecision.toUpperCase(), reason } });
-                          await onChanged();
-                        } catch (e) { setError((e as Error).message); }
+                        setOverrideModal({ decisionId: detail.latestDecision.id, decision: "DEFER", reason: "" });
                       }}>{t("btn.override")}</button>
                       <button className="btn btn-primary text-[11px] px-2" title={t("btn.act")} onClick={async () => {
                         setError(null);
@@ -206,6 +200,9 @@ export default function CommandCenter() {
       <footer className="mt-3 shrink-0 text-[11px] text-[var(--muted)] text-center">
         {t("footer.demo", { dataMode: me.dataMode === "SIMULATED" ? t("footer.simulatedMode") : t("footer.liveMode") })}
       </footer>
+      {overrideModal && selected && (
+        <OverrideModal state={overrideModal} selected={selected} onClose={() => setOverrideModal(null)} onChanged={onChanged} />
+      )}
     </div>
   );
 }
@@ -255,6 +252,49 @@ function rowToEvidence(r: any): EvidenceView {
     implied_severity: r.implied_severity, observed_at: r.observed_at, captured_at: r.captured_at,
     lat: r.lat, lng: r.lng, verification_status: r.verification_status, simulated: r.simulated === 1,
   };
+}
+
+/** In-app override modal (replaces window.prompt). */
+function OverrideModal({ state, selected, onClose, onChanged }: { state: { decisionId: string; decision: string; reason: string }; selected: string; onClose: () => void; onChanged: () => Promise<void> }) {
+  const { t } = useTranslation();
+  const [decision, setDecision] = useState(state.decision);
+  const [reason, setReason] = useState(state.reason);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function submit() {
+    if (!reason.trim()) { setErr(t("err.reasonRequired") || "A reason is required."); return; }
+    setBusy(true);
+    setErr(null);
+    try {
+      await api("/api/override", { method: "POST", body: { entity: { level: "MICRO_CLUSTER", id: selected }, decisionId: state.decisionId, humanDecision: decision.toUpperCase(), reason } });
+      await onChanged();
+      onClose();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)" }} onClick={onClose}>
+      <div className="panel p-6 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-sm font-bold mb-4">{t("btn.override")}</h3>
+        <label className="text-xs text-[var(--muted)] block mb-1">{t("overrideDecision") || "New Decision"}</label>
+        <select className="w-full p-2 rounded text-sm mb-3" style={{ background: "var(--bg2)", border: "1px solid var(--border)", color: "var(--fg)" }} value={decision} onChange={(e) => setDecision(e.target.value)}>
+          {["ACT", "DEFER", "MONITOR", "ESCALATE"].map((d) => <option key={d} value={d}>{d}</option>)}
+        </select>
+        <label className="text-xs text-[var(--muted)] block mb-1">{t("overrideReason") || "Reason"}</label>
+        <textarea className="w-full p-2 rounded text-sm mb-3" style={{ background: "var(--bg2)", border: "1px solid var(--border)", color: "var(--fg)", minHeight: 60 }} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("overrideReasonPlaceholder") || "Enter the reason for this override..."} />
+        {err && <div className="text-xs mb-2" style={{ color: "#f87171" }}>⚠ {err}</div>}
+        <div className="flex gap-2 justify-end">
+          <button className="btn text-xs px-3" onClick={onClose} disabled={busy}>{t("btn.cancel") || "Cancel"}</button>
+          <button className="btn btn-primary text-xs px-3" onClick={submit} disabled={busy || !reason.trim()}>{busy ? "..." : t("btn.confirm") || "Confirm Override"}</button>
+        </div>
+      </div>
+    </div>
+  );
 }
 function rowToTask(t: any): TaskView {
   return {

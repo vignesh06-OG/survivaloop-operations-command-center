@@ -10,14 +10,16 @@ const ROLES: Role[] = ["ADMIN", "SUPERVISOR", "FIELD_WORKER", "AUDITOR"];
 export default function Login({ onAuthed }: { onAuthed: () => void }) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   async function login(role: Role) {
     setBusy(role);
+    setError(null);
     try {
       await api(`/api/auth/demo/${role}`, { method: "POST" });
       onAuthed();
     } catch (e) {
-      alert((e as Error).message);
+      setError((e as Error).message);
     } finally {
       setBusy(null);
     }
@@ -36,6 +38,14 @@ export default function Login({ onAuthed }: { onAuthed: () => void }) {
           <br />
           <span className="text-xs">{t("appPipeline")}</span>
         </p>
+        {error && (
+          <div className="mb-4 p-3 rounded-md text-sm border" style={{ background: "rgba(239,68,68,0.1)", borderColor: "rgba(239,68,68,0.3)", color: "#f87171" }}>
+            <div className="flex items-center justify-between gap-2">
+              <span>⚠ {error}</span>
+              <button onClick={() => setError(null)} className="text-xs opacity-60 hover:opacity-100">✕</button>
+            </div>
+          </div>
+        )}
         <div className="text-xs font-semibold text-[var(--warn)] mb-2">{t("demoIdentity")}</div>
         <div className="grid gap-2">
           {ROLES.map((role) => (
@@ -57,3 +67,4 @@ export default function Login({ onAuthed }: { onAuthed: () => void }) {
     </div>
   );
 }
+

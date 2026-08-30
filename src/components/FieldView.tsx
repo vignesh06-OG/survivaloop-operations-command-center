@@ -22,6 +22,7 @@ export default function FieldView() {
     try {
       const m = await api<{ user: Me | null }>("/api/auth/me");
       if (!m.user) { setMe(null); setLoading(false); return; }
+      if (m.user.role !== "FIELD_WORKER") { window.location.href = "/"; return; }
       setMe(m.user);
       
       const ts = await api<TaskView[]>("/api/tasks");
