@@ -156,6 +156,18 @@ export default function CommandCenter() {
                         try { await api("/api/decision", { method: "POST", body: { level: "MICRO_CLUSTER", id: selected } }); await onChanged(); }
                         catch (e) { setError((e as Error).message); }
                       }}>⟳</button>
+                      <button className="btn text-[11px] px-2 text-amber-500 border-amber-500/30 hover:bg-amber-500/10" title="Override Decision" onClick={async () => {
+                        if (!detail?.latestDecision?.id) { setError("No decision to override."); return; }
+                        const newDecision = window.prompt("Enter new decision (ACT, DEFER, MONITOR, ESCALATE):", "DEFER");
+                        if (!newDecision) return;
+                        const reason = window.prompt("Reason for override:");
+                        if (!reason) return;
+                        setError(null);
+                        try {
+                          await api("/api/override", { method: "POST", body: { entity: { level: "MICRO_CLUSTER", id: selected }, decisionId: detail.latestDecision.id, humanDecision: newDecision.toUpperCase(), reason } });
+                          await onChanged();
+                        } catch (e) { setError((e as Error).message); }
+                      }}>Override</button>
                       <button className="btn btn-primary text-[11px] px-2" title="Sense→Act" onClick={async () => {
                         setError(null);
                         try {
