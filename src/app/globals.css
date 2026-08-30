@@ -204,11 +204,7 @@ html, body {
 .gis-legend .row { display: flex; align-items: center; gap: 7px; }
 .gis-legend .sw { width: 14px; height: 9px; border-radius: 2px; border: 1px solid rgba(0,0,0,.5); }
 
-/* animated dashed drone route (drawn in svg) */
-.gis-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; }
-.route-dash { stroke-dasharray: 3 4; animation: dash 1.4s linear infinite; }
-@keyframes dash { to { stroke-dashoffset: -14; } }
-.route-glow { stroke-dasharray: 3 4; animation: dash 1.4s linear infinite; }
+
 
 /* side columns scroll within the fixed command area */
 html, body, #__next { height: 100%; }
