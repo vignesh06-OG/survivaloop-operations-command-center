@@ -1,0 +1,224 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0b0f14;
+  --panel: #121820;
+  --panel2: #182028;
+  --line: #232d38;
+  --text: #e6edf3;
+  --muted: #8a97a6;
+  --accent: #34d399;
+  --warn: #fbbf24;
+  --crit: #f87171;
+  --info: #60a5fa;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #2a3542; border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 8px; font-weight: 600; font-size: 13px;
+  border: 1px solid var(--line); background: var(--panel2); color: var(--text);
+  cursor: pointer; transition: background .12s, border-color .12s;
+}
+.btn:hover { background: #202b36; border-color: #33414e; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-primary { background: #0f766e; border-color: #0f766e; color: #fff; }
+.btn-primary:hover { background: #0d9488; border-color: #0d9488; }
+.btn-danger { background: #7f1d1d; border-color: #7f1d1d; color: #fff; }
+
+.input, select.input, textarea.input {
+  width: 100%; padding: 8px 10px; border-radius: 8px; font-size: 13px;
+  background: #10161d; border: 1px solid var(--line); color: var(--text); outline: none;
+}
+.input:focus { border-color: #10b981; }
+
+.mono { font-variant-numeric: tabular-nums; }
+
+.grid-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 380px;
+  gap: 14px;
+}
+@media (max-width: 1100px) { .grid-dashboard { grid-template-columns: 1fr; } }
+
+.fade { animation: fade .25s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px);} to { opacity:1; transform:none;} }
+
+/* ---------- forest GIS map ---------- */
+.gis-map {
+  position: relative;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #0a0e11;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  isolation: isolate;
+}
+.gis-basemap {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  transform: scale(1.001);
+}
+/* subtle cinematic grade + vignette so overlays stay readable over the forest */
+.gis-grade {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(6,9,12,0.55) 0%, rgba(6,9,12,0.06) 22%, rgba(6,9,12,0.04) 62%, rgba(4,7,10,0.5) 100%),
+    radial-gradient(120% 90% at 50% 42%, rgba(0,0,0,0) 48%, rgba(0,0,0,0.42) 100%);
+}
+.gis-vignette {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  box-shadow: inset 0 0 140px 30px rgba(3,6,9,0.75);
+}
+.gis-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.gis-layer .poi { pointer-events: auto; cursor: pointer; }
+
+/* cluster markers */
+.gis-cluster {
+  position: absolute; transform: translate(-50%,-50%);
+  border-radius: 999px; border: 1.5px solid rgba(255,255,255,0.85);
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.45), 0 1px 4px rgba(0,0,0,0.6);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.gis-cluster:hover { transform: translate(-50%,-50%) scale(1.18); }
+.gis-cluster.sel { box-shadow: 0 0 0 2px rgba(0,0,0,0.55), 0 0 0 5px rgba(255,255,255,0.35); }
+.gis-label {
+  position: absolute; transform: translate(-50%, 0);
+  font-size: 10px; font-weight: 600; letter-spacing: .04em;
+  color: #cfe0d6; text-shadow: 0 1px 2px rgba(0,0,0,.9);
+  white-space: nowrap;
+}
+.gis-label .n { color: #9fb6a6; font-weight: 500; }
+
+/* critical target marker (MC-07) */
+.mc-marker { position: absolute; transform: translate(-50%,-50%); z-index: 5; }
+.mc-halo {
+  position: absolute; left: 50%; top: 50%; width: 74px; height: 74px;
+  transform: translate(-50%,-50%); border-radius: 50%;
+  border: 2px solid rgba(248,113,113,0.9);
+  animation: mcPulse 2.4s ease-out infinite;
+  pointer-events: none;
+}
+.mc-halo.h2 { animation-delay: 1.2s; border-color: rgba(251,146,60,0.8); }
+@keyframes mcPulse {
+  0%   { transform: translate(-50%,-50%) scale(.35); opacity: .95; }
+  70%  { transform: translate(-50%,-50%) scale(1.05); opacity: 0; }
+  100% { transform: translate(-50%,-50%) scale(1.1); opacity: 0; }
+}
+.mc-ring {
+  position: absolute; left: 50%; top: 50%; width: 30px; height: 30px;
+  transform: translate(-50%,-50%); border-radius: 50%;
+  border: 1.5px solid rgba(248,113,113,0.55);
+  background: radial-gradient(circle, rgba(248,113,113,0.22) 0%, rgba(248,113,113,0) 68%);
+  animation: spin 9s linear infinite;
+  border-top-color: transparent; pointer-events: none;
+}
+@keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+.mc-core {
+  position: absolute; left: 50%; top: 50%; width: 20px; height: 20px;
+  transform: translate(-50%,-50%); border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #fca5a5 0%, #ef4444 55%, #7f1d1d 100%);
+  border: 2px solid #fff3f3;
+  box-shadow: 0 0 12px 2px rgba(239,68,68,0.9), 0 2px 6px rgba(0,0,0,0.7);
+}
+
+/* drone marker */
+.drone { position: absolute; transform: translate(-50%,-50%); z-index: 6; }
+.drone .head {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #bfe9ff, #38bdf8 55%, #0e6379 100%);
+  border: 2px solid #d9f3ff; box-shadow: 0 0 12px 2px rgba(56,189,248,0.85);
+}
+.drone .dring {
+  position: absolute; left: 50%; top: 50%; width: 40px; height: 40px;
+  transform: translate(-50%,-50%); border-radius: 50%;
+  border: 1.5px dashed rgba(125,211,252,0.7);
+  animation: spin 14s linear infinite; pointer-events: none;
+}
+.drone.bob { animation: bob 2.6s ease-in-out infinite; }
+@keyframes bob { 0%,100%{ margin-top: 0 } 50% { margin-top: -4px } }
+
+/* floating chips / HUD */
+.gis-hud {
+  position: absolute; z-index: 4;
+  background: rgba(9,13,16,0.62); border: 1px solid rgba(45,58,70,0.85);
+  backdrop-filter: blur(6px); border-radius: 8px;
+  color: #dbe6e0; padding: 6px 9px; font-size: 11px; line-height: 1.35;
+}
+.gis-hud .k { color: #95aa9b; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
+.gis-hud .v { font-weight: 700; color: #f0f6f2; }
+
+/* right-side vertical map controls (in-flow flex, non-absolute) */
+.gis-ctrl {
+  position: absolute; right: 12px; top: 150px; z-index: 4;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.gis-ctrl-btn {
+  width: 34px; height: 34px; display: grid; place-items: center;
+  background: rgba(9,13,16,0.62); border: 1px solid rgba(45,58,70,0.85);
+  border-radius: 8px; backdrop-filter: blur(6px);
+  cursor: pointer; font-size: 15px; line-height: 1;
+  transition: background .12s, border-color .12s;
+}
+.gis-ctrl-btn:hover { background: rgba(20,28,34,0.85); border-color: #3a4a56; }
+.gis-chip { font-weight: 600; letter-spacing: .04em; }
+.gis-sep { width: 1px; height: 12px; background: rgba(50,65,78,.7); }
+
+/* legend swatches */
+.gis-legend { display: flex; flex-direction: column; gap: 4px; }
+.gis-legend .row { display: flex; align-items: center; gap: 7px; }
+.gis-legend .sw { width: 14px; height: 9px; border-radius: 2px; border: 1px solid rgba(0,0,0,.5); }
+
+/* animated dashed drone route (drawn in svg) */
+.gis-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; }
+.route-dash { stroke-dasharray: 3 4; animation: dash 1.4s linear infinite; }
+@keyframes dash { to { stroke-dashoffset: -14; } }
+.route-glow { stroke-dasharray: 3 4; animation: dash 1.4s linear infinite; }
+
+/* side columns scroll within the fixed command area */
+html, body, #__next { height: 100%; }
+.command-body { display: flex; gap: 14px; align-items: stretch; height: max(560px, calc(100vh - 118px)); }
+.rail { width: clamp(228px, 20%, 320px); min-width: 228px; }
+.rail-scroll { height: 100%; overflow-y: auto; padding-right: 2px; }
+.center-col { flex: 1 1 auto; min-width: 0; position: relative; height: 100%; }
+.center-col .gis-map { height: 100%; }
+@media (max-width: 1080px) {
+  .command-body { flex-direction: column; }
+  .rail { width: 100%; min-width: 0; }
+  .center-col { min-height: 62vh; }
+}

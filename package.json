@@ -1,0 +1,35 @@
+{
+  "name": "survivaloop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "lint": "next lint",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:engine": "node --import tsx --test tests/engine.decision.test.ts tests/engine.sla.test.ts tests/engine.state.test.ts tests/engine.capacity.test.ts tests/engine.verify.test.ts tests/engine.security.test.ts tests/engine.offline.test.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.5.0",
+    "clsx": "^2.1.1",
+    "jose": "^5.9.6",
+    "next": "14.2.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "20",
+    "@types/react": "^18.3.10",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  }
+}
