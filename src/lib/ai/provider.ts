@@ -41,6 +41,8 @@ export interface TaskContext {
   existingNotes: string | null;
 }
 
+import { z } from "zod";
+
 /**
  * AI response types. Each response has a `kind` discriminator so the frontend
  * can render the appropriate UI widget.
@@ -72,6 +74,42 @@ export interface AiDraftReport {
     photoRefs: string[];
     location: { lat: number; lng: number } | null;
   };
+}
+
+// --- Zod Schemas for Validation ---
+
+export const aiTextResponseSchema = z.object({
+  kind: z.literal("text"),
+  text: z.string(),
+});
+
+export const aiRequestUploadSchema = z.object({
+  kind: z.literal("request_upload"),
+  prompt: z.string(),
+});
+
+export const aiDraftReportSchema = z.object({
+  kind: z.literal("draft_report"),
+  summary: z.string(),
+  draft: z.object({
+    note: z.string(),
+    photoRefs: z.array(z.string()),
+    location: z.object({ lat: z.number(), lng: z.number() }).nullable(),
+  }),
+});
+
+export const aiResponseSchema = z.discriminatedUnion("kind", [
+  aiTextResponseSchema,
+  aiRequestUploadSchema,
+  aiDraftReportSchema,
+]);
+
+/**
+ * Validates any raw data from an AI provider against the expected schema.
+ * Throws if the response does not match the contract.
+ */
+export function parseAiResponse(data: unknown): AiResponse {
+  return aiResponseSchema.parse(data);
 }
 
 /**

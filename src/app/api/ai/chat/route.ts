@@ -3,7 +3,7 @@ import { requireUser, handleError, HttpError } from "@/server/request";
 import { ensureSimulation, getCtx } from "@/server/context";
 import { canAccessTask, roleHas } from "@/domain/permissions";
 import type { ChatMessage, TaskContext } from "@/lib/ai/provider";
-import { MockAiProvider } from "@/lib/ai/mockProvider";
+import { getProvider } from "@/lib/ai/factory";
 
 /**
  * POST /api/ai/chat — AI Field Assistant conversation endpoint.
@@ -17,7 +17,7 @@ import { MockAiProvider } from "@/lib/ai/mockProvider";
  *   6. The AI response is advisory only — no state mutations occur here.
  */
 
-const provider = new MockAiProvider();
+const provider = getProvider();
 
 export async function POST(req: Request) {
   try {
@@ -38,7 +38,11 @@ export async function POST(req: Request) {
       throw new HttpError(400, "taskId is required.");
     }
 
-    // Sanitize history: only allow user/assistant roles from the client, strip anything else.
+    // Sanitize history: limit array size, only allow user/assistant roles, cap string length.
+    if (!Array.isArray(history) || history.length > 50) {
+      throw new HttpError(400, "History too long or invalid format.");
+    }
+
     const sanitizedHistory: ChatMessage[] = history
       .filter((m: any) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
       .map((m: any) => ({
