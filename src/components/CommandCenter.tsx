@@ -8,10 +8,13 @@ import MapCanvas, { type MapData } from "./MapCanvas";
 import TaskPipeline, { type TaskView } from "./TaskPipeline";
 import EvidenceTimeline, { type EvidenceView } from "./EvidenceTimeline";
 import Verification, { type ProofView } from "./Verification";
+import { useTranslation } from "@/lib/i18n/I18nContext";
+import LanguageSelector from "./LanguageSelector";
 
 interface Me { id: string; name: string; email: string; role: string; orgId: string; dataMode: string }
 
 export default function CommandCenter() {
+  const { t, lang } = useTranslation();
   const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
@@ -126,10 +129,10 @@ export default function CommandCenter() {
               <PriorityQueue items={queueItems} selected={selected} onSelect={setSelected} />
               {/* KPI mini-strip */}
               <div className="grid grid-cols-2 gap-3">
-                <Kpi label="Active" value={(oversight?.alertCounts?.all ?? 0)} />
-                <Kpi label="ACT" value={(oversight?.alertCounts?.ACT ?? 0)} tone="crit" />
-                <Kpi label="Open tasks" value={openTasks(oversight)} />
-                <Kpi label="Verified" value={(oversight?.taskCounts?.VERIFIED ?? 0)} tone="ok" />
+                <Kpi label={t("kpi.active")} value={(oversight?.alertCounts?.all ?? 0)} />
+                <Kpi label={t("kpi.act")} value={(oversight?.alertCounts?.ACT ?? 0)} tone="crit" />
+                <Kpi label={t("kpi.openTasks")} value={openTasks(oversight)} />
+                <Kpi label={t("kpi.verified")} value={(oversight?.taskCounts?.VERIFIED ?? 0)} tone="ok" />
               </div>
             </div>
           </div>
@@ -146,17 +149,17 @@ export default function CommandCenter() {
               <div className="panel p-3">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0">
-                    <h2 className="text-sm font-bold truncate">{selectedCluster?.code ?? selected ?? "Select a case"}</h2>
+                    <h2 className="text-sm font-bold truncate">{selectedCluster?.code ?? selected ?? t("selectCase")}</h2>
                     <div className="text-[11px] text-[var(--muted)] truncate">{selectedCluster?.name ?? "cluster"} {selected ? `· ${selected}` : ""}</div>
                   </div>
                   {selected && (
                     <div className="flex gap-1.5 shrink-0">
-                      <button className="btn text-[11px] px-2" title="Re-run decision" onClick={async () => {
+                      <button className="btn text-[11px] px-2" title={t("btn.rerun")} onClick={async () => {
                         setError(null);
                         try { await api("/api/decision", { method: "POST", body: { level: "MICRO_CLUSTER", id: selected } }); await onChanged(); }
                         catch (e) { setError((e as Error).message); }
-                      }}>⟳</button>
-                      <button className="btn text-[11px] px-2 text-amber-500 border-amber-500/30 hover:bg-amber-500/10" title="Override Decision" onClick={async () => {
+                      }}>{t("btn.rerun")}</button>
+                      <button className="btn text-[11px] px-2 text-amber-500 border-amber-500/30 hover:bg-amber-500/10" title={t("btn.override")} onClick={async () => {
                         if (!detail?.latestDecision?.id) { setError("No decision to override."); return; }
                         const newDecision = window.prompt("Enter new decision (ACT, DEFER, MONITOR, ESCALATE):", "DEFER");
                         if (!newDecision) return;
@@ -167,8 +170,8 @@ export default function CommandCenter() {
                           await api("/api/override", { method: "POST", body: { entity: { level: "MICRO_CLUSTER", id: selected }, decisionId: detail.latestDecision.id, humanDecision: newDecision.toUpperCase(), reason } });
                           await onChanged();
                         } catch (e) { setError((e as Error).message); }
-                      }}>Override</button>
-                      <button className="btn btn-primary text-[11px] px-2" title="Sense→Act" onClick={async () => {
+                      }}>{t("btn.override")}</button>
+                      <button className="btn btn-primary text-[11px] px-2" title={t("btn.act")} onClick={async () => {
                         setError(null);
                         try {
                           const d = await api<any>("/api/decision", { method: "POST", body: { level: "MICRO_CLUSTER", id: selected } });
@@ -177,7 +180,7 @@ export default function CommandCenter() {
                           }
                           await onChanged();
                         } catch (e) { setError((e as Error).message); }
-                      }}>Act</button>
+                      }}>{t("btn.act")}</button>
                     </div>
                   )}
                 </div>
@@ -192,7 +195,7 @@ export default function CommandCenter() {
               )}
               {!selected && (
                 <div className="panel p-5 text-center text-[var(--muted)] text-sm">
-                  Select an entity from the map or queue to inspect evidence, rationale, capacity, SLA, tasks &amp; verification.
+                  {t("emptyState.select")}
                 </div>
               )}
             </div>
@@ -201,28 +204,30 @@ export default function CommandCenter() {
       </div>
 
       <footer className="mt-3 shrink-0 text-[11px] text-[var(--muted)] text-center">
-        SurvivaLoop demo · {me.dataMode === "SIMULATED" ? "SIMULATED / SYNTHETIC DATA — not real measurements" : "LIVE DATA"} · domain logic is server-side; the UI cannot change decisions.
+        {t("footer.demo", { dataMode: me.dataMode === "SIMULATED" ? t("footer.simulatedMode") : t("footer.liveMode") })}
       </footer>
     </div>
   );
 }
 
 function Header({ me, onLogout, onRunSim }: { me: Me; onLogout: () => void; onRunSim: () => void }) {
+  const { t } = useTranslation();
   return (
     <header className="flex items-center justify-between py-2 border-b border-[var(--line)]">
       <div className="flex items-center gap-3">
         <span className="text-xl">🌱</span>
         <div>
-          <div className="font-bold leading-tight">SurvivaLoop</div>
-          <div className="text-[11px] text-[var(--muted)]">Operations Command Center</div>
+          <div className="font-bold leading-tight">{t("appTitle")}</div>
+          <div className="text-[11px] text-[var(--muted)]">{t("nav.commandCenter")}</div>
         </div>
-        <span className="pill ml-2 bg-amber-900/40 text-amber-200">DEMO / SIMULATED</span>
+        <span className="pill ms-2 bg-amber-900/40 text-amber-200">{t("nav.simulatedData")}</span>
       </div>
       <div className="flex items-center gap-3">
-        <span className="pill bg-[#121820] border border-[var(--line)]">{me.role}</span>
+        <LanguageSelector />
+        <span className="pill bg-[#121820] border border-[var(--line)]">{t(`role.${me.role}`) || me.role}</span>
         <span className="text-[12px] text-[var(--muted)] hidden sm:inline">{me.name}</span>
-        <button className="btn text-[12px]" onClick={onRunSim}>Seed</button>
-        <button className="btn text-[12px]" onClick={onLogout}>Log out</button>
+        <button className="btn text-[12px]" onClick={onRunSim}>{t("nav.seed")}</button>
+        <button className="btn text-[12px]" onClick={onLogout}>{t("nav.logout")}</button>
       </div>
     </header>
   );

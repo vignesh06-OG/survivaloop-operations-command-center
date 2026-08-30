@@ -8,11 +8,14 @@ export interface EvidenceView {
 const VSTATUS: Record<string, string> = {
   PENDING: "#fbbf24", AUTO_PASS: "#34d399", FLAGGED: "#f87171", HUMAN_VERIFIED: "#10b981", REJECTED: "#ef4444",
 };
+import { useTranslation } from "@/lib/i18n/I18nContext";
+
 export default function EvidenceTimeline({ evidence }: { evidence: EvidenceView[] }) {
+  const { t } = useTranslation();
   return (
     <div className="panel p-4">
-      <h3 className="text-sm font-bold mb-2">Evidence timeline</h3>
-      {evidence.length === 0 && <div className="text-[var(--muted)] text-sm">No evidence recorded.</div>}
+      <h3 className="text-sm font-bold mb-2">{t("evidence.title")}</h3>
+      {evidence.length === 0 && <div className="text-[var(--muted)] text-sm">{t("evidence.empty")}</div>}
       <ol className="space-y-2">
         {evidence.map((e) => (
           <li key={e.id} className="flex gap-3 text-[12px]">
@@ -25,14 +28,14 @@ export default function EvidenceTimeline({ evidence }: { evidence: EvidenceView[
                 {e.simulated && <span className="pill text-[10px] bg-amber-900/30 text-amber-300">SIM</span>}
               </div>
               <div className="text-[var(--muted)]">
-                observed {fmtTime(e.observed_at)} · captured {fmtTime(e.captured_at)} · sev {pct(e.implied_severity)}
+                {t("evidence.observed")} {fmtTime(e.observed_at)} · {t("evidence.captured")} {fmtTime(e.captured_at)} · {t("evidence.sev")} {pct(e.implied_severity)}
                 {e.lat != null ? ` · ${e.lat.toFixed(4)},${e.lng?.toFixed(4)}` : ""}
               </div>
             </div>
           </li>
         ))}
       </ol>
-      <p className="text-[11px] text-[var(--muted)] mt-3">Evidence is a claim, not truth. Severity is derived from the evidence type server-side.</p>
+      <p className="text-[11px] text-[var(--muted)] mt-3">{t("evidence.disclaimer")}</p>
     </div>
   );
 }

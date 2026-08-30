@@ -7,6 +7,7 @@ import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { Html, PerspectiveCamera, Plane, Line, Sphere, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import { DECISION_COLORS, SLA_COLORS, FALLBACK_TASK_COLOR } from "@/lib/present";
+import { useTranslation } from "@/lib/i18n/I18nContext";
 
 interface Cluster { id: string; code: string; name: string; lat: number; lng: number; zone_id?: string; zone?: string }
 interface NodeMeta {
@@ -44,11 +45,12 @@ function Drone({ origin, target }: { origin: { x: number; y: number }; target: {
   const curve = useMemo(() => new THREE.QuadraticBezierCurve3(startVec, controlVec, endVec), [startVec, controlVec, endVec]);
   const points = useMemo(() => curve.getPoints(50), [curve]);
   
+  const { t } = useTranslation();
   useFrame(({ clock }) => {
     if (!meshRef.current) return;
     // loop every 7 seconds
-    const t = (clock.getElapsedTime() % 7) / 7; 
-    const pos = curve.getPointAt(t);
+    const timeScale = (clock.getElapsedTime() % 7) / 7; 
+    const pos = curve.getPointAt(timeScale);
     meshRef.current.position.copy(pos);
   });
 
@@ -62,12 +64,12 @@ function Drone({ origin, target }: { origin: { x: number; y: number }; target: {
         <Html position={[0, 1.5, 0]} center zIndexRange={[100, 0]}>
           <div className="gis-hud" style={{ width: 148, transform: "translateY(-100%)", background: "rgba(15,23,42,0.8)", backdropFilter: "blur(4px)" }}>
             <div className="flex items-center justify-between">
-              <span className="k">DRONE</span>
-              <span className="text-[9.5px] font-bold text-sky-200">DELTA</span>
+              <span className="k">{t("map.drone")}</span>
+              <span className="text-[9.5px] font-bold text-sky-200">{t("map.delta")}</span>
             </div>
             <div className="flex items-center gap-1.5 mt-1">
-              <span className="pill" style={{ background: "rgba(56,189,248,.16)", color: "#7dd3fc", border: "1px solid rgba(56,189,248,.4)", padding: "0 6px", fontSize: 9 }}>EN ROUTE</span>
-              <span className="mono text-[10px] text-[#bae6fd]">ETA 02:12</span>
+              <span className="pill" style={{ background: "rgba(56,189,248,.16)", color: "#7dd3fc", border: "1px solid rgba(56,189,248,.4)", padding: "0 6px", fontSize: 9 }}>{t("map.enRoute")}</span>
+              <span className="mono text-[10px] text-[#bae6fd]">{t("map.eta")} 02:12</span>
             </div>
           </div>
         </Html>
@@ -86,6 +88,7 @@ function Terrain() {
 }
 
 function Marker({ cluster, meta, pos, isTarget, isSelected, onClick }: { cluster: Cluster; meta: NodeMeta; pos: { x: number; y: number }; isTarget: boolean; isSelected: boolean; onClick: () => void }) {
+  const { t } = useTranslation();
   const color = meta.decision ? DECISION_COLORS[meta.decision as keyof typeof DECISION_COLORS]
     : meta.sla ? SLA_COLORS[meta.sla as keyof typeof SLA_COLORS]
     : meta.taskState ? (FALLBACK_TASK_COLOR[meta.taskState] ?? "#64748b") : "#6b7c6f";
@@ -108,9 +111,9 @@ function Marker({ cluster, meta, pos, isTarget, isSelected, onClick }: { cluster
         <Html position={[0, 2, 0]} center zIndexRange={[100, 0]}>
           <div className="gis-hud" style={{ width: 152, padding: "7px 9px", textAlign: "left", background: "rgba(15,23,42,0.8)", backdropFilter: "blur(4px)" }}>
             <div className="text-[11px] font-bold tracking-wide text-red-200">{cluster.code}</div>
-            <div className="text-[9.5px] text-[#e9c9b0]">Timber Rot · {meta.decision ?? "CRITICAL"}</div>
+            <div className="text-[9.5px] text-[#e9c9b0]">{t("map.timberRot")} · {t(`decision.${meta.decision}`) ?? t("severity.CRITICAL")}</div>
             <div className="mt-1 flex items-center gap-1.5">
-              <span className="pill" style={{ background: "rgba(239,68,68,.18)", color: "#f87171", border: "1px solid rgba(239,68,68,.4)", padding: "0 6px", fontSize: 9 }}>{meta.decision ?? "CRITICAL"}</span>
+              <span className="pill" style={{ background: "rgba(239,68,68,.18)", color: "#f87171", border: "1px solid rgba(239,68,68,.4)", padding: "0 6px", fontSize: 9 }}>{t(`decision.${meta.decision}`) ?? t("severity.CRITICAL")}</span>
               <span className="mono text-[10px] text-[#fca5a5]">00:14:32</span>
             </div>
           </div>
@@ -141,6 +144,7 @@ export default function MapCanvas({ data, selected, onSelect }: {
   selected: string | null;
   onSelect: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const hostRef = useRef<HTMLDivElement>(null);
 
   // Project cluster coords onto the forest viewport as percentages (0-100).
@@ -221,24 +225,24 @@ export default function MapCanvas({ data, selected, onSelect }: {
       <div className="gis-hud" style={{ position: "absolute", left: 12, top: 12, minWidth: 150, zIndex: 20 }}>
         <div className="flex items-center gap-1.5">
           <span style={{ width: 7, height: 7, borderRadius: 2, background: "#34d399", boxShadow: "0 0 6px #34d399" }} />
-          <span className="k">SECTOR 4</span>
+          <span className="k">{t("map.sector")}</span>
         </div>
         <div className="text-[12px] font-bold text-[#eef5f0]">{sectorLabel}</div>
-        <div className="text-[10px] text-[#9fb2a4]">{target?.name ?? "Agri-Zone 2"} · {data.simulatedNote ?? ""}</div>
+        <div className="text-[10px] text-[#9fb2a4]">{target?.name ?? "Agri-Zone 2"} · {data.simulatedNote ? t("nav.simulatedData") : t("nav.liveData")}</div>
       </div>
 
       <div className="gis-hud" style={{ position: "absolute", right: 12, top: 12, textAlign: "right", zIndex: 20 }}>
-        <div className="k">SECTOR 4</div>
-        <div className="mono text-[11px] font-bold text-[#eef5f0]">LAT {coordLat.toFixed(4)}</div>
-        <div className="mono text-[11px] font-bold text-[#eef5f0]">LNG {coordLng.toFixed(4)}</div>
+        <div className="k">{t("map.sector")}</div>
+        <div className="mono text-[11px] font-bold text-[#eef5f0]">{t("map.lat")} {coordLat.toFixed(4)}</div>
+        <div className="mono text-[11px] font-bold text-[#eef5f0]">{t("map.lng")} {coordLng.toFixed(4)}</div>
       </div>
 
       <div className="gis-ctrl" style={{ zIndex: 20 }}>
         {[
-          { icon: "◉", label: "my location", color: "#34d399" },
-          { icon: "▤", label: "layers", color: "#9fb2a4" },
-          { icon: "＋", label: "zoom in", color: "#9fb2a4" },
-          { icon: "－", label: "zoom out", color: "#9fb2a4" },
+          { icon: "◉", label: t("map.myLocation"), color: "#34d399" },
+          { icon: "▤", label: t("map.layers"), color: "#9fb2a4" },
+          { icon: "＋", label: t("map.zoomIn"), color: "#9fb2a4" },
+          { icon: "－", label: t("map.zoomOut"), color: "#9fb2a4" },
         ].map((b) => (
           <button key={b.label} title={b.label} className="gis-ctrl-btn" style={{ color: b.color }}>
             {b.icon}
@@ -247,16 +251,16 @@ export default function MapCanvas({ data, selected, onSelect }: {
       </div>
 
       <div className="gis-hud" style={{ position: "absolute", left: 108, bottom: 12, zIndex: 20 }}>
-        <div className="k" style={{ marginBottom: 3 }}>LEGEND</div>
+        <div className="k" style={{ marginBottom: 3 }}>{t("map.legend")}</div>
         <div className="gis-legend">
-          <span className="row"><span className="sw" style={{ background: "#2f6b3a" }} />HEALTHY</span>
-          <span className="row"><span className="sw" style={{ background: "#a08a2c" }} />STRESSED</span>
-          <span className="row"><span className="sw" style={{ background: "#7f2d2d" }} />CRITICAL</span>
+          <span className="row"><span className="sw" style={{ background: "#2f6b3a" }} />{t("map.healthy")}</span>
+          <span className="row"><span className="sw" style={{ background: "#a08a2c" }} />{t("map.stressed")}</span>
+          <span className="row"><span className="sw" style={{ background: "#7f2d2d" }} />{t("map.critical")}</span>
         </div>
       </div>
 
       <div className="gis-hud" style={{ position: "absolute", right: 12, bottom: 12, textAlign: "right", zIndex: 20 }}>
-        <div className="k text-[#cfe0d6]">3D OPERATIONS MAP · EXPERIMENTAL</div>
+        <div className="k text-[#cfe0d6]">{t("map.experimental")}</div>
       </div>
     </div>
   );
