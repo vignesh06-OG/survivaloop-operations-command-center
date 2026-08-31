@@ -147,8 +147,16 @@ export class AppService {
         const conflictCount = this.repo.listConflicts(ent.level, ent.id).length;
         const cluster = clusterByKey.get(ent.id);
         let sla = null;
+        let slaDeadline = null;
+        let assignedWorkerIds: string[] = [];
         const tk = tasks.find((t) => t.entity_level === ent.level && t.entity_id === ent.id && ["COMMITTED", "DISPATCHED", "ACCEPTED", "IN_PROGRESS", "PROOF_SUBMITTED"].includes(t.state as string));
-        if (tk) sla = tk.sla_state as string;
+        if (tk) {
+          sla = tk.sla_state as string;
+          slaDeadline = tk.sla_deadline as number;
+          try {
+            assignedWorkerIds = JSON.parse(tk.assigned_worker_ids_json as string);
+          } catch (e) {}
+        }
         return {
           entity: ent,
           entityCode: (cluster?.code as string) ?? ent.id,
@@ -161,6 +169,9 @@ export class AppService {
           overridden: d.overridden === 1,
           conflictCount,
           sla,
+          slaDeadline,
+          assignedWorkerIds,
+          reason: JSON.parse((d.reason_json as string) || "[]")[0] || "No specific reason.",
           id: d.id,
         };
       }),
@@ -180,7 +191,8 @@ export class AppService {
     const tasks = this.repo.listTasks(orgId).filter((t) => t.entity_level === level && t.entity_id === id);
     const conflicts = this.repo.listConflicts(level, id);
     const proofs = tasks.flatMap((t) => this.repo.listProofsForTask(t.id as string));
-    return { evidence, latestDecision: latestD, latestAssessment: latestA, tasks, conflicts, proofs };
+    const outcomes = this.repo.listOutcomesForEntity(orgId, level, id).map(rowToOutcome);
+    return { evidence, latestDecision: latestD, latestAssessment: latestA, tasks, conflicts, proofs, outcomes };
   }
 }
 
@@ -211,3 +223,16 @@ function assertOrg(actorOrgId: string, resourceOrgId: string): void {
 }
 
 export { PermissionDeniedError, decisionRuleId };
+
+function rowToOutcome(r: DbRow): any {
+  return {
+    id: r.id,
+    entityLevel: r.entity_level,
+    entityId: r.entity_id,
+    taskId: r.task_id,
+    survived: Boolean(r.survived),
+    improved: Boolean(r.improved),
+    measuredAt: r.measured_at,
+    recordedBy: r.recorded_by_id,
+  };
+}

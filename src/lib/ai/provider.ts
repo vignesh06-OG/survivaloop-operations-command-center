@@ -21,6 +21,7 @@
 export interface ChatMessage {
   role: "user" | "assistant" | "system";
   content: string;
+  image?: string; // base64 data url or normal url
   /** Timestamp (epoch ms) for audit trail. */
   ts: number;
 }
@@ -50,7 +51,9 @@ import { z } from "zod";
 export type AiResponse =
   | AiTextResponse
   | AiRequestUpload
-  | AiDraftReport;
+  | AiDraftReport
+  | AiTreeHealthResponse
+  | AiIntentResponse;
 
 export interface AiTextResponse {
   kind: "text";
@@ -76,6 +79,28 @@ export interface AiDraftReport {
   };
 }
 
+export interface AiTreeHealthResponse {
+  kind: "tree_health";
+  healthScore: number;
+  status: "HEALTHY" | "STRESSED" | "CRITICAL" | "DEAD";
+  issues: string[];
+  recommendations: string[];
+  urgency: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  speciesGuess: string;
+}
+
+export interface AiIntentResponse {
+  kind: "intent";
+  intent: "COMPLAINT" | "TREE_HEALTH" | "NAVIGATION" | "TASK_QUERY" | "GENERAL";
+  replyText: string;
+  extractedComplaint?: {
+    category: string;
+    description: string;
+    location: string;
+    urgency: string;
+  } | null;
+}
+
 // --- Zod Schemas for Validation ---
 
 export const aiTextResponseSchema = z.object({
@@ -98,10 +123,34 @@ export const aiDraftReportSchema = z.object({
   }),
 });
 
+export const aiTreeHealthSchema = z.object({
+  kind: z.literal("tree_health"),
+  healthScore: z.number(),
+  status: z.enum(["HEALTHY", "STRESSED", "CRITICAL", "DEAD"]),
+  issues: z.array(z.string()),
+  recommendations: z.array(z.string()),
+  urgency: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
+  speciesGuess: z.string(),
+});
+
+export const aiIntentSchema = z.object({
+  kind: z.literal("intent"),
+  intent: z.enum(["COMPLAINT", "TREE_HEALTH", "NAVIGATION", "TASK_QUERY", "GENERAL"]),
+  replyText: z.string(),
+  extractedComplaint: z.object({
+    category: z.string(),
+    description: z.string(),
+    location: z.string(),
+    urgency: z.string(),
+  }).nullable().optional(),
+});
+
 export const aiResponseSchema = z.discriminatedUnion("kind", [
   aiTextResponseSchema,
   aiRequestUploadSchema,
   aiDraftReportSchema,
+  aiTreeHealthSchema,
+  aiIntentSchema,
 ]);
 
 /**
@@ -127,7 +176,7 @@ export interface AiProvider {
    */
   chat(
     history: ChatMessage[],
-    context: TaskContext,
+    context: TaskContext | null,
     locale: string,
   ): Promise<AiResponse>;
 }

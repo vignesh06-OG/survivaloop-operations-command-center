@@ -5,8 +5,10 @@ import Login from "./Login";
 import PriorityQueue, { type QueueItem } from "./PriorityQueue";
 import WhyPanel, { type WhyData } from "./WhyPanel";
 import MapCanvas, { type MapData } from "./MapCanvas";
+import RealMap from "./RealMap";
 import TaskPipeline, { type TaskView } from "./TaskPipeline";
 import EvidenceTimeline, { type EvidenceView } from "./EvidenceTimeline";
+import OutcomePanel from "./OutcomePanel";
 import Verification, { type ProofView } from "./Verification";
 import { useTranslation } from "@/lib/i18n/I18nContext";
 import LanguageSelector from "./LanguageSelector";
@@ -24,6 +26,9 @@ export default function CommandCenter() {
   const [zones, setZones] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [overrideModal, setOverrideModal] = useState<{ decisionId: string; decision: string; reason: string } | null>(null);
+  const hasMapboxToken = !!process.env.NEXT_PUBLIC_MAPBOX_TOKEN && !process.env.NEXT_PUBLIC_MAPBOX_TOKEN.includes("placeholder");
+  const [use3D, setUse3D] = useState(!hasMapboxToken);
+  const [mapError, setMapError] = useState(!hasMapboxToken);
 
   const refresh = useCallback(async () => {
     const m = await api<{ user: Me | null }>("/api/auth/me");
@@ -74,6 +79,9 @@ export default function CommandCenter() {
       conflictCount: d.conflictCount,
       overridden: d.overridden,
       sla: d.sla,
+      slaDeadline: d.slaDeadline,
+      assignedWorkerIds: d.assignedWorkerIds,
+      reason: d.reason,
     }));
   }, [oversight]);
 
@@ -140,8 +148,31 @@ export default function CommandCenter() {
           </div>
 
           {/* ---- CENTER 60% : realistic forest GIS (hero) ---- */}
-          <div className="center-col">
-            <MapCanvas data={mapData} selected={selected} onSelect={setSelected} />
+          <div className="center-col relative min-h-0">
+            {mapError && (
+              <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-amber-900/90 text-amber-200 px-4 py-2 rounded-lg text-xs shadow-lg border border-amber-500/50 flex items-center gap-2">
+                <span>⚠️</span> Satellite view requires a valid Mapbox API key. Defaulting to 3D map.
+              </div>
+            )}
+            <div className="absolute top-4 left-4 z-50 flex bg-[#121820] border border-[var(--line)] rounded-lg overflow-hidden shadow-lg">
+              <button 
+                onClick={() => setUse3D(false)} 
+                className={`px-3 py-1.5 text-xs font-bold transition-colors ${!use3D ? 'bg-[#34d399] text-black' : 'text-[var(--muted)] hover:text-white'}`}
+              >
+                🌐 Satellite
+              </button>
+              <button 
+                onClick={() => setUse3D(true)} 
+                className={`px-3 py-1.5 text-xs font-bold border-l border-[var(--line)] transition-colors ${use3D ? 'bg-[#34d399] text-black' : 'text-[var(--muted)] hover:text-white'}`}
+              >
+                🎮 3D Experimental
+              </button>
+            </div>
+            {use3D ? (
+              <MapCanvas data={mapData} selected={selected} onSelect={setSelected} />
+            ) : (
+              <RealMap data={mapData} selected={selected} onSelect={setSelected} onError={() => { setUse3D(true); setMapError(true); }} />
+            )}
           </div>
 
           {/* ---- RIGHT 20% : audit log + detail ---- */}
@@ -183,6 +214,13 @@ export default function CommandCenter() {
                 <>
                   {why && <WhyPanel data={why} />}
                   <EvidenceTimeline evidence={(detail?.evidence ?? []).map(rowToEvidence)} />
+                  <OutcomePanel 
+                    summary={detail || {}} 
+                    me={me} 
+                    onRefresh={() => loadDetail(selected!)} 
+                    entityLevel="MICRO_CLUSTER" 
+                    entityId={selected} 
+                  />
                   <TaskPipeline tasks={(detail?.tasks ?? []).map(rowToTask)} user={me} onChanged={onChanged} />
                   <Verification proofs={(detail?.proofs ?? []).map(rowToProof)} user={me} onChanged={onChanged} />
                 </>

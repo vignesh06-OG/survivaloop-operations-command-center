@@ -84,11 +84,51 @@ function extractObservations(history: ChatMessage[]): string {
 export class MockAiProvider implements AiProvider {
   async chat(
     history: ChatMessage[],
-    context: TaskContext,
+    context: TaskContext | null,
     locale: string,
   ): Promise<AiResponse> {
     const userMessages = history.filter((m) => m.role === "user");
     const turnCount = userMessages.length;
+    const lastMsg = history[history.length - 1];
+
+    if (lastMsg && lastMsg.image) {
+      return {
+        kind: "tree_health",
+        healthScore: 45,
+        status: "STRESSED",
+        issues: ["Mock disease", "Pest damage"],
+        recommendations: ["Spray pesticide", "Increase watering"],
+        urgency: "HIGH",
+        speciesGuess: "Mango tree"
+      };
+    }
+
+    if (!context || (lastMsg && (lastMsg.content.toLowerCase().includes("complaint") || lastMsg.content.includes("शिकायत")))) {
+      if (lastMsg && (lastMsg.content.toLowerCase().includes("complaint") || lastMsg.content.includes("शिकायत") || lastMsg.content.includes("water"))) {
+        return {
+          kind: "intent",
+          intent: "COMPLAINT",
+          replyText: locale === "hi" ? "मैं आपकी शिकायत दर्ज कर रहा हूँ।" : "I am registering your complaint.",
+          extractedComplaint: {
+            category: "Infrastructure",
+            description: lastMsg.content,
+            location: "GPS (mock)",
+            urgency: "HIGH"
+          }
+        };
+      }
+      if (lastMsg && (lastMsg.content.toLowerCase().includes("kahan") || lastMsg.content.toLowerCase().includes("where") || lastMsg.content.toLowerCase().includes("task") || lastMsg.content.toLowerCase().includes("kaha"))) {
+        return {
+          kind: "text",
+          text: locale === "hi" ? "आपका काम यहाँ से 350 मीटर दूर है। Google Maps में देखने के लिए 'रास्ता देखो' बटन दबाएं।" : "Your task is 350 meters away. Please check the 'Navigate' button to open Google Maps."
+        };
+      }
+      return {
+        kind: "intent",
+        intent: "GENERAL",
+        replyText: locale === "hi" ? "नमस्ते! मैं आपकी कैसे मदद कर सकता हूँ?" : "Hello! How can I help you?"
+      };
+    }
 
     const vars: Record<string, string> = {
       entityId: context.entityId,

@@ -1,9 +1,27 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 import { useTranslation, LANGUAGES, LanguageCode } from "@/lib/i18n/I18nContext";
 
 export default function LanguageSelector() {
   const { lang, setLang } = useTranslation();
+
+  const grouped = useMemo(() => {
+    const groups: Record<string, typeof LANGUAGES> = {
+      "North": [],
+      "East": [],
+      "West": [],
+      "South": [],
+      "Other": []
+    };
+    for (const l of LANGUAGES) {
+      if (groups[l.region]) {
+        groups[l.region].push(l);
+      } else {
+        groups["Other"].push(l);
+      }
+    }
+    return groups;
+  }, []);
 
   return (
     <div className="relative inline-block">
@@ -13,10 +31,14 @@ export default function LanguageSelector() {
         className="appearance-none bg-[#121820] text-sm text-[var(--text)] border border-[var(--line)] rounded px-3 py-1.5 pe-8 hover:border-gray-500 focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
         aria-label="Select Language"
       >
-        {LANGUAGES.map((l) => (
-          <option key={l.code} value={l.code}>
-            {l.nativeName} ({l.name})
-          </option>
+        {Object.entries(grouped).map(([region, langs]) => (
+          <optgroup key={region} label={region}>
+            {langs.map((l) => (
+              <option key={l.code} value={l.code}>
+                {l.nativeName} ({l.name})
+              </option>
+            ))}
+          </optgroup>
         ))}
       </select>
       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[var(--muted)]">

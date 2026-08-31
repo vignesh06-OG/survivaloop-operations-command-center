@@ -322,6 +322,9 @@ export class Repo {
   createOutcome(o: DbRow): void { this.insert("outcomes", o); }
   getOutcome(id: string): DbRow | null { return this.db.prepare("SELECT * FROM outcomes WHERE id=?").get(id) as DbRow | null; }
   listOutcomes(orgId: string): DbRow[] { return this.db.prepare("SELECT * FROM outcomes WHERE org_id=? ORDER BY measured_at DESC").all(orgId) as DbRow[]; }
+  listOutcomesForEntity(orgId: string, level: string, id: string): DbRow[] { 
+    return this.db.prepare("SELECT * FROM outcomes WHERE org_id=? AND entity_level=? AND entity_id=? ORDER BY measured_at DESC").all(orgId, level, id) as DbRow[]; 
+  }
 
   /* ---------------- audit ---------------- */
   appendAudit(a: DbRow): void { this.insert("audit_logs", a); }

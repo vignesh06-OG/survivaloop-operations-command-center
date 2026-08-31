@@ -1,33 +1,43 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 
-export type LanguageCode = "en" | "hi" | "mr" | "bn" | "ta" | "te" | "kn" | "gu" | "pa" | "ml" | "or" | "as" | "ur";
+export type LanguageCode = "en" | "hi" | "mr" | "bn" | "ta" | "te" | "kn" | "gu" | "pa" | "ml" | "or" | "as" | "ur" | "ks" | "ne" | "sd" | "doi" | "kok" | "mni" | "brx" | "sat" | "mai";
 
-export const LANGUAGES: { code: LanguageCode; name: string; nativeName: string }[] = [
-  { code: "en", name: "English", nativeName: "English" },
-  { code: "hi", name: "Hindi", nativeName: "हिन्दी" },
-  { code: "mr", name: "Marathi", nativeName: "मराठी" },
-  { code: "bn", name: "Bengali", nativeName: "বাংলা" },
-  { code: "ta", name: "Tamil", nativeName: "தமிழ்" },
-  { code: "te", name: "Telugu", nativeName: "తెలుగు" },
-  { code: "kn", name: "Kannada", nativeName: "ಕನ್ನಡ" },
-  { code: "gu", name: "Gujarati", nativeName: "ગુજરાતી" },
-  { code: "pa", name: "Punjabi", nativeName: "ਪੰਜਾਬੀ" },
-  { code: "ml", name: "Malayalam", nativeName: "മലയാളം" },
-  { code: "or", name: "Odia", nativeName: "ଓଡ଼ିଆ" },
-  { code: "as", name: "Assamese", nativeName: "অসমীয়া" },
-  { code: "ur", name: "Urdu", nativeName: "اردو" }
+export const LANGUAGES: { code: LanguageCode; name: string; nativeName: string; region: string; speechCode: string }[] = [
+  { code: "en", name: "English", nativeName: "English", region: "Other", speechCode: "en-IN" },
+  { code: "ne", name: "Nepali", nativeName: "नेपाली", region: "Other", speechCode: "ne-NP" },
+  { code: "hi", name: "Hindi", nativeName: "हिन्दी", region: "North", speechCode: "hi-IN" },
+  { code: "pa", name: "Punjabi", nativeName: "ਪੰਜਾਬੀ", region: "North", speechCode: "pa-IN" },
+  { code: "ur", name: "Urdu", nativeName: "اردو", region: "North", speechCode: "ur-IN" },
+  { code: "ks", name: "Kashmiri", nativeName: "کٲشُر", region: "North", speechCode: "ks-IN" },
+  { code: "doi", name: "Dogri", nativeName: "डोगरी", region: "North", speechCode: "doi-IN" },
+  { code: "bn", name: "Bengali", nativeName: "বাংলা", region: "East", speechCode: "bn-IN" },
+  { code: "as", name: "Assamese", nativeName: "অসমীয়া", region: "East", speechCode: "as-IN" },
+  { code: "or", name: "Odia", nativeName: "ଓଡ଼ିଆ", region: "East", speechCode: "or-IN" },
+  { code: "mni", name: "Manipuri", nativeName: "ꯃꯤꯇꯩꯂꯣꯟ", region: "East", speechCode: "mni-IN" },
+  { code: "brx", name: "Bodo", nativeName: "बड़ो", region: "East", speechCode: "brx-IN" },
+  { code: "sat", name: "Santhali", nativeName: "ᱥᱟᱱᱛᱟᱲᱤ", region: "East", speechCode: "sat-IN" },
+  { code: "mai", name: "Maithili", nativeName: "मैथिली", region: "East", speechCode: "mai-IN" },
+  { code: "mr", name: "Marathi", nativeName: "मराठी", region: "West", speechCode: "mr-IN" },
+  { code: "gu", name: "Gujarati", nativeName: "ગુજરાતી", region: "West", speechCode: "gu-IN" },
+  { code: "kok", name: "Konkani", nativeName: "कोंकणी", region: "West", speechCode: "kok-IN" },
+  { code: "sd", name: "Sindhi", nativeName: "سنڌي", region: "West", speechCode: "sd-IN" },
+  { code: "ta", name: "Tamil", nativeName: "தமிழ்", region: "South", speechCode: "ta-IN" },
+  { code: "te", name: "Telugu", nativeName: "తెలుగు", region: "South", speechCode: "te-IN" },
+  { code: "kn", name: "Kannada", nativeName: "ಕನ್ನಡ", region: "South", speechCode: "kn-IN" },
+  { code: "ml", name: "Malayalam", nativeName: "മലയാളം", region: "South", speechCode: "ml-IN" }
 ];
 
 interface I18nContextType {
   lang: LanguageCode;
   setLang: (lang: LanguageCode) => void;
   t: (key: string, params?: Record<string, any>) => string;
+  speechCode: string;
 }
 
 const I18nContext = createContext<I18nContextType | null>(null);
 
-const rtlLanguages: LanguageCode[] = ["ur"];
+const rtlLanguages: LanguageCode[] = ["ur", "ks", "sd"];
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<LanguageCode>("en");
@@ -87,7 +97,9 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     return text;
   }, [dict, enDict]);
 
-  return <I18nContext.Provider value={{ lang, setLang, t }}>{children}</I18nContext.Provider>;
+  const speechCode = LANGUAGES.find(l => l.code === lang)?.speechCode || "en-IN";
+
+  return <I18nContext.Provider value={{ lang, setLang, t, speechCode }}>{children}</I18nContext.Provider>;
 }
 
 export function useTranslation() {

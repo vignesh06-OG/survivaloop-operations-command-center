@@ -79,7 +79,9 @@ export default function FieldAssistant({ task, onRefresh, onClose }: Props) {
           ? res.response.text
           : res.response.kind === "request_upload"
             ? res.response.prompt
-            : res.response.summary,
+            : res.response.kind === "draft_report"
+              ? res.response.summary
+              : "[Unsupported AI response in FieldAssistant]",
         aiPayload: res.response,
         ts: Date.now(),
       };
