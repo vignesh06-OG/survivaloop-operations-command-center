@@ -237,18 +237,7 @@ export default function MapCanvas({ data, selected, onSelect }: {
         <div className="mono text-[11px] font-bold text-[#eef5f0]">{t("map.lng")} {coordLng.toFixed(4)}</div>
       </div>
 
-      <div className="gis-ctrl" style={{ zIndex: 20 }}>
-        {[
-          { icon: "◉", label: t("map.myLocation"), color: "#34d399" },
-          { icon: "▤", label: t("map.layers"), color: "#9fb2a4" },
-          { icon: "＋", label: t("map.zoomIn"), color: "#9fb2a4" },
-          { icon: "－", label: t("map.zoomOut"), color: "#9fb2a4" },
-        ].map((b) => (
-          <button key={b.label} title={b.label} className="gis-ctrl-btn" style={{ color: b.color }}>
-            {b.icon}
-          </button>
-        ))}
-      </div>
+
 
       <div className="gis-hud" style={{ position: "absolute", left: 108, bottom: 12, zIndex: 20 }}>
         <div className="k" style={{ marginBottom: 3 }}>{t("map.legend")}</div>

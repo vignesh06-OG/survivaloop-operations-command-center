@@ -115,15 +115,15 @@ export default function FieldAssistant({ task, onRefresh, onClose }: Props) {
     await sendToAi(newHistory);
   }, [input, sending, messages, sendToAi]);
 
-  const handleUpload = useCallback(() => {
-    // Simulate photo capture (in production this would use Camera API / file input)
-    const ref = "ipfs://field_photo_" + Date.now();
+  const handleUpload = useCallback((file: File) => {
+    // Simulate photo capture (in production this would use Camera API / file input -> S3)
+    const ref = "ipfs://field_photo_" + Date.now() + "_" + file.name;
     setUploadedRefs((prev) => [...prev, ref]);
 
     const userMsg: Message = {
       id: "user_" + Date.now(),
       role: "user",
-      content: "📷 Photo uploaded",
+      content: `📷 Photo uploaded: ${file.name}`,
       ts: Date.now(),
     };
     const newHistory = [...messages, userMsg];
@@ -242,12 +242,19 @@ export default function FieldAssistant({ task, onRefresh, onClose }: Props) {
 
               {/* Interactive elements for AI responses */}
               {msg.aiPayload?.kind === "request_upload" && (
-                <button
-                  onClick={handleUpload}
-                  className="mt-3 w-full py-2.5 rounded-xl bg-[#0ea5e9] text-white font-bold text-sm active:scale-95 transition-transform flex items-center justify-center gap-2"
-                >
+                <label className="mt-3 w-full py-2.5 rounded-xl bg-[#0ea5e9] text-white font-bold text-sm active:scale-95 transition-transform flex items-center justify-center gap-2 cursor-pointer">
                   <span>📷</span> {t("ai.btnUpload")}
-                </button>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        handleUpload(e.target.files[0]);
+                      }
+                    }} 
+                  />
+                </label>
               )}
 
               {msg.aiPayload?.kind === "draft_report" && (
