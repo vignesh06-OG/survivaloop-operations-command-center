@@ -36,23 +36,43 @@ export default function CommandCenter() {
   const [mapError, setMapError] = useState(!hasMapboxToken);
 
   const refresh = useCallback(async () => {
-    const m = await api<{ user: Me | null }>("/api/auth/me");
-    if (!m.user) { setMe(null); setLoading(false); return; }
-    if (m.user.role === "FIELD_WORKER" && window.location.pathname !== "/field") { window.location.href = "/field"; return; }
-    if (m.user.role === "ADMIN" && window.location.pathname !== "/admin") { window.location.href = "/admin"; return; }
-    if (m.user.role === "AUDITOR" && window.location.pathname !== "/audit") { window.location.href = "/audit"; return; }
-    if (m.user.role === "SUPERVISOR" && window.location.pathname !== "/") { window.location.href = "/"; return; }
-    
-    setMe(m.user);
-    const [o, ent, zs] = await Promise.all([
-      api<any>("/api/oversight"),
-      api<{ clusters: any[] }>("/api/entities?scope=clusters"),
-      api<{ zones: any[] }>("/api/entities?scope=zones"),
-    ]);
-    setOversight(o);
-    setClusters(ent.clusters ?? []);
-    setZones(zs.zones ?? []);
-    setLoading(false);
+    try {
+      // 1. Fetch user with a timeout (3s) to prevent infinite hanging
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 3000);
+      
+      let m;
+      try {
+        const res = await fetch("/api/auth/me", { signal: abortController.signal });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error("Auth failed");
+        m = await res.json();
+      } catch (err) {
+        clearTimeout(timeoutId);
+        throw err;
+      }
+      
+      if (!m || !m.user) { setMe(null); setLoading(false); return; }
+      if (m.user.role === "FIELD_WORKER" && window.location.pathname !== "/field") { window.location.href = "/field"; return; }
+      if (m.user.role === "ADMIN" && window.location.pathname !== "/admin") { window.location.href = "/admin"; return; }
+      if (m.user.role === "AUDITOR" && window.location.pathname !== "/audit") { window.location.href = "/audit"; return; }
+      if (m.user.role === "SUPERVISOR" && window.location.pathname !== "/") { window.location.href = "/"; return; }
+      
+      setMe(m.user);
+      const [o, ent, zs] = await Promise.all([
+        api<any>("/api/oversight"),
+        api<{ clusters: any[] }>("/api/entities?scope=clusters"),
+        api<{ zones: any[] }>("/api/entities?scope=zones"),
+      ]);
+      setOversight(o);
+      setClusters(ent.clusters ?? []);
+      setZones(zs.zones ?? []);
+    } catch (e) {
+      console.error("Refresh failed:", e);
+      setMe(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { 

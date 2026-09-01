@@ -69,12 +69,12 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
     return { id: uid, email, role };
   };
   const users = [
-    makeUser("admin", "Priya Deshmukh", "admin@survivaloop.demo", "ADMIN"),
-    makeUser("sup", "Arun Kulkarni", "supervisor@survivaloop.demo", "SUPERVISOR"),
-    makeUser("w1", "Ravi Patil", "worker1@survivaloop.demo", "FIELD_WORKER"),
+    makeUser("admin", "Demo Admin", "admin@survivaloop.demo", "ADMIN"),
+    makeUser("sup", "Demo Supervisor", "supervisor@survivaloop.demo", "SUPERVISOR"),
+    makeUser("w1", "Demo Field Worker", "worker@survivaloop.demo", "FIELD_WORKER"),
     makeUser("w2", "Sunita Jadhav", "worker2@survivaloop.demo", "FIELD_WORKER"),
     makeUser("w3", "Imran Shaikh", "worker3@survivaloop.demo", "FIELD_WORKER"),
-    makeUser("aud", "Neha Rao", "auditor@survivaloop.demo", "AUDITOR"),
+    makeUser("aud", "Demo Auditor", "auditor@survivaloop.demo", "AUDITOR"),
   ];
 
   // ---- interventions catalog ----
@@ -88,7 +88,7 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
   for (const i of interventions) repo.createIntervention({ ...i, org_id: ORG });
 
   // ---- workers ----
-  repo.createWorker({ id: "wk_w1", org_id: ORG, user_id: "u_w1", name: "Ravi Patil", hours_per_day: 8, active: 1 });
+  repo.createWorker({ id: "wk_w1", org_id: ORG, user_id: "u_w1", name: "Demo Field Worker", hours_per_day: 8, active: 1 });
   repo.createWorker({ id: "wk_w2", org_id: ORG, user_id: "u_w2", name: "Sunita Jadhav", hours_per_day: 8, active: 1 });
   repo.createWorker({ id: "wk_w3", org_id: ORG, user_id: "u_w3", name: "Imran Shaikh", hours_per_day: 8, active: 1 });
 
