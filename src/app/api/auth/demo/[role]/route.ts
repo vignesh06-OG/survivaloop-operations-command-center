@@ -41,14 +41,19 @@ export async function POST(
       throw new HttpError(500, `DB_INIT_FAILED: ${(err as Error).message}`);
     }
 
-    // Demo identity: for FIELD_WORKER, prefer the seeded worker that is actually
-    // assigned to the dispatched demo task (u_w1) so the worker sees a live job.
-    const candidates = repo.listUsers("org_demo").filter((u) => u.role === role);
-    const preferred = role === "FIELD_WORKER" ? "u_w1" : null;
-    const user =
-      (preferred && candidates.find((u) => u.id === preferred)) ||
-      candidates[0];
-    if (!user) throw new HttpError(404, `No seeded user for role '${role}'.`);
+    // Use deterministic claims to avoid memory DB lookup during cold starts
+    let user;
+    if (role === "ADMIN") {
+      user = { id: "u_a1", name: "Demo Admin", role: "ADMIN", org_id: "org_demo", email: "admin@demo.local" };
+    } else if (role === "SUPERVISOR") {
+      user = { id: "u_s1", name: "Demo Supervisor", role: "SUPERVISOR", org_id: "org_demo", email: "sup@demo.local" };
+    } else if (role === "FIELD_WORKER") {
+      user = { id: "u_w1", name: "Demo Field Worker", role: "FIELD_WORKER", org_id: "org_demo", email: "field@demo.local" };
+    } else if (role === "AUDITOR") {
+      user = { id: "u_aud1", name: "Demo Auditor", role: "AUDITOR", org_id: "org_demo", email: "audit@demo.local" };
+    } else {
+      throw new HttpError(404, `No seeded user for role '${role}'.`);
+    }
 
     let token;
     try {

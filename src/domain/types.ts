@@ -377,6 +377,10 @@ export interface User {
   name: string;
   role: Role;
   passwordHash: string; // server-only; never exposed
+  age?: number;
+  city?: string;
+  locality?: string;
+  points: number;
 }
 
 export interface Organisation {

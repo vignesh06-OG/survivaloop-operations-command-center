@@ -27,8 +27,19 @@ export class MemoryRepo implements Partial<Repo> {
   }
   getOrg(id: string) { return this.tables.organisations.find(o => o.id === id) || null; }
 
-  createUser(u: { id: string; orgId: string; email: string; name: string; role: string; passwordHash: string }) {
-    this.insert("users", { id: u.id, org_id: u.orgId, email: u.email, name: u.name, role: u.role, password_hash: u.passwordHash });
+  createUser(u: { id: string; orgId: string; email: string; name: string; role: string; passwordHash: string; age?: number; city?: string; locality?: string; points?: number }) {
+    this.insert("users", { 
+      id: u.id, org_id: u.orgId, email: u.email, name: u.name, role: u.role, password_hash: u.passwordHash,
+      age: u.age, city: u.city, locality: u.locality, points: u.points || 0
+    });
+  }
+  updateUser(id: string, data: { age?: number; city?: string; locality?: string; points?: number }) {
+    const user = this.tables.users.find(u => u.id === id);
+    if (!user) return;
+    if (data.age !== undefined) user.age = data.age;
+    if (data.city !== undefined) user.city = data.city;
+    if (data.locality !== undefined) user.locality = data.locality;
+    if (data.points !== undefined) user.points = data.points;
   }
   getUserByEmail(email: string) { return this.tables.users.find(u => u.email === email) || null; }
   getUser(id: string) { return this.tables.users.find(u => u.id === id) || null; }

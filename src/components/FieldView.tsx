@@ -7,8 +7,9 @@ import type { TaskView } from "./TaskPipeline";
 import { useTranslation } from "@/lib/i18n/I18nContext";
 import PhotoUpload from "./PhotoUpload";
 import BottomNav from "./BottomNav";
+import ProfileModal from "./ProfileModal";
 
-interface Me { id: string; name: string; email: string; role: string; orgId: string; dataMode: string }
+interface Me { id: string; name: string; email: string; role: string; orgId: string; dataMode: string; points: number; city?: string; locality?: string; age?: number }
 
 export default function FieldView() {
   const { t, lang, speechCode } = useTranslation();
@@ -16,12 +17,31 @@ export default function FieldView() {
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<TaskView[]>([]);
   const [isOnline, setIsOnline] = useState(true);
+  const [activeTab, setActiveTab] = useState<"tasks" | "rewards">("tasks");
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
   const refresh = useCallback(async () => {
     try {
-      const m = await api<{ user: Me | null }>("/api/auth/me");
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 2000);
+      let res;
+      try {
+        res = await fetch("/api/auth/me", { signal: abortController.signal });
+        clearTimeout(timeoutId);
+      } catch (err) {
+        clearTimeout(timeoutId);
+        setMe(null);
+        setLoading(false);
+        return;
+      }
+      if (!res.ok) {
+        setMe(null);
+        setLoading(false);
+        return;
+      }
+      const m = await res.json();
       if (!m.user) { setMe(null); setLoading(false); return; }
-      if (m.user.role !== "FIELD_WORKER") { window.location.href = "/"; return; }
+      if (m.user.role !== "FIELD_WORKER") { window.location.assign("/"); return; }
       setMe(m.user);
       
       const ts = await api<TaskView[]>("/api/tasks");
@@ -29,6 +49,10 @@ export default function FieldView() {
       const activeTasks = ts.filter(t => !["PROOF_SUBMITTED", "VERIFIED", "REJECTED", "EXPIRED", "CANCELLED"].includes(t.state));
       // Sort by creation time (or SLA)
       setTasks(activeTasks.sort((a, b) => b.created_at - a.created_at));
+
+      // Fetch leaderboard
+      const lb = await api<any[]>("/api/leaderboard?scope=overall").catch(() => []);
+      setLeaderboard(lb);
     } catch (e) {
       console.error(e);
     } finally {
@@ -73,7 +97,9 @@ export default function FieldView() {
   const activeTask = tasks[0];
 
   return (
-    <div className="min-h-screen bg-black text-[#e6edf3] flex flex-col max-w-md mx-auto">
+    <div className="min-h-screen bg-black text-[#e6edf3] flex flex-col max-w-md mx-auto relative overflow-hidden">
+      <ProfileModal user={me} onComplete={refresh} />
+      
       {/* Offline Banner */}
       {!isOnline && (
         <div className="bg-[#eab308] text-black font-bold p-3 text-center text-lg shadow-md z-50">
@@ -89,7 +115,7 @@ export default function FieldView() {
           </div>
           <div>
             <h1 className="font-bold text-xl text-white">{me.name}</h1>
-            <div className="text-sm font-bold text-[#34d399]">{tasks.length} tasks aaj</div>
+            <div className="text-sm font-bold text-[#34d399]">{tasks.length} {t("field.tasksToday") || "tasks today"}</div>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
@@ -101,19 +127,76 @@ export default function FieldView() {
           </button>
         </div>
       </header>
+
+      {/* TABS */}
+      <div className="flex border-b border-[var(--line)] bg-[#0b0f14]">
+        <button 
+          onClick={() => setActiveTab("tasks")} 
+          className={`flex-1 py-3 text-sm font-bold border-b-2 ${activeTab === 'tasks' ? 'border-[#34d399] text-[#34d399]' : 'border-transparent text-[var(--muted)]'}`}
+        >
+          My Tasks
+        </button>
+        <button 
+          onClick={() => setActiveTab("rewards")} 
+          className={`flex-1 py-3 text-sm font-bold border-b-2 ${activeTab === 'rewards' ? 'border-[#34d399] text-[#34d399]' : 'border-transparent text-[var(--muted)]'}`}
+        >
+          Rewards & Rank
+        </button>
+      </div>
       
       {/* TASK CARD OR EMPTY STATE */}
-      <div className="flex-1 flex flex-col p-4">
-        {!activeTask ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
-            <div className="text-6xl animate-bounce">🎉</div>
-            <h2 className="text-2xl font-bold text-[#34d399]">Aaj ke saare task ho gaye!</h2>
-            <p className="text-xl text-[var(--muted)]">Ghar jao!</p>
+      {activeTab === "tasks" ? (
+        <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+          {!activeTask ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+              <div className="text-6xl animate-bounce">🎉</div>
+              <h2 className="text-2xl font-bold text-[#34d399]">{t("field.allTasksDone") || "All tasks complete for today"}</h2>
+              <p className="text-xl text-[var(--muted)] mb-4">{t("field.youAreDone") || "You're done"}</p>
+              
+              <button 
+                onClick={async () => {
+                  setLoading(true);
+                  await api("/api/simulate", { method: "POST" });
+                  await refresh();
+                }}
+                className="mt-4 px-6 py-3 bg-[#34d399] text-black font-bold rounded-xl"
+              >
+                Load Demo Tasks
+              </button>
+            </div>
+          ) : (
+            <TaskCard task={activeTask} onNext={() => refresh()} lang={lang} isOnline={isOnline} />
+          )}
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col p-4 overflow-y-auto space-y-6">
+          <div className="bg-[#1a232f] border border-[var(--line)] rounded-2xl p-6 text-center shadow-lg">
+            <h2 className="text-sm font-bold text-[var(--muted)] uppercase tracking-wider mb-2">My Points</h2>
+            <div className="text-5xl font-black text-[#34d399]">{me.points}</div>
+            <p className="text-xs text-[var(--muted)] mt-2">Earn points for every verified task</p>
           </div>
-        ) : (
-          <TaskCard task={activeTask} onNext={() => refresh()} lang={lang} isOnline={isOnline} />
-        )}
-      </div>
+          
+          <div>
+            <h3 className="text-lg font-bold text-white mb-3">Leaderboard <span className="text-xs font-normal text-[var(--muted)] ml-2">(Demo incentive layer - Synthetic)</span></h3>
+            <div className="bg-[#0b0f14] border border-[var(--line)] rounded-2xl overflow-hidden">
+              {leaderboard.map((lbUser, idx) => (
+                <div key={lbUser.id} className={`flex items-center justify-between p-4 border-b border-[var(--line)] last:border-0 ${lbUser.id === me.id ? 'bg-[#34d399]/10' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx < 3 ? 'bg-[#34d399] text-black' : 'bg-[#1a232f] text-white'}`}>
+                      {idx + 1}
+                    </div>
+                    <div>
+                      <div className="font-bold text-white">{lbUser.name}</div>
+                      <div className="text-xs text-[var(--muted)]">{lbUser.locality || 'Unknown'}</div>
+                    </div>
+                  </div>
+                  <div className="font-black text-[#34d399]">{lbUser.points} pts</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

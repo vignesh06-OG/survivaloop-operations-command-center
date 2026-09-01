@@ -24,7 +24,11 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   role TEXT NOT NULL CHECK (role IN ('ADMIN','SUPERVISOR','FIELD_WORKER','AUDITOR')),
-  password_hash TEXT NOT NULL
+  password_hash TEXT NOT NULL,
+  age INTEGER,
+  city TEXT,
+  locality TEXT,
+  points INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS zones (

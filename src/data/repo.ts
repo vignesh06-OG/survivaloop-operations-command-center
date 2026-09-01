@@ -56,9 +56,9 @@ export class Repo {
   getOrg(id: string): DbRow | null { return this.db.prepare("SELECT * FROM organisations WHERE id=?").get(id) as DbRow | null; }
 
   /* ---------------- users ---------------- */
-  createUser(u: { id: string; orgId: string; email: string; name: string; role: string; passwordHash: string }): void {
-    this.db.prepare("INSERT INTO users(id,org_id,email,name,role,password_hash) VALUES(?,?,?,?,?,?)")
-      .run(u.id, u.orgId, u.email, u.name, u.role, u.passwordHash);
+  createUser(u: { id: string; orgId: string; email: string; name: string; role: string; passwordHash: string; age?: number; city?: string; locality?: string; points?: number }): void {
+    this.db.prepare("INSERT INTO users(id,org_id,email,name,role,password_hash,age,city,locality,points) VALUES(?,?,?,?,?,?,?,?,?,?)")
+      .run(u.id, u.orgId, u.email, u.name, u.role, u.passwordHash, u.age ?? null, u.city ?? null, u.locality ?? null, u.points ?? 0);
   }
   getUserByEmail(email: string): DbRow | null { return this.db.prepare("SELECT * FROM users WHERE email=?").get(email) as DbRow | null; }
   getUser(id: string): DbRow | null { return this.db.prepare("SELECT * FROM users WHERE id=?").get(id) as DbRow | null; }

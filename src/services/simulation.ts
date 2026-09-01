@@ -17,6 +17,7 @@ export interface SimOptions {
   clusterPerZone?: number;
   treePerCluster?: number;
   scenarios: ScenarioKind[];
+  seedDemoTasks?: boolean;
 }
 
 export type ScenarioKind =
@@ -62,19 +63,22 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
 
   repo.createOrg({ id: ORG, name: "Riverside Greenbelt Pilot", dataMode: "SIMULATED" });
 
-  // ---- users ----
-  const makeUser = (id: string, name: string, email: string, role: string) => {
+  const makeUser = (id: string, name: string, email: string, role: string, points = 0) => {
     const uid = `u_${id}`;
-    repo.createUser({ id: uid, orgId: ORG, email, name, role, passwordHash: hashPassword("demo") });
+    repo.createUser({ 
+      id: uid, orgId: ORG, email, name, role, 
+      passwordHash: hashPassword("demo"),
+      points, city: "Pune", locality: "Riverside", age: 30
+    });
     return { id: uid, email, role };
   };
   const users = [
-    makeUser("admin", "Demo Admin", "admin@survivaloop.demo", "ADMIN"),
-    makeUser("sup", "Demo Supervisor", "supervisor@survivaloop.demo", "SUPERVISOR"),
-    makeUser("w1", "Demo Field Worker", "worker@survivaloop.demo", "FIELD_WORKER"),
-    makeUser("w2", "Sunita Jadhav", "worker2@survivaloop.demo", "FIELD_WORKER"),
-    makeUser("w3", "Imran Shaikh", "worker3@survivaloop.demo", "FIELD_WORKER"),
-    makeUser("aud", "Demo Auditor", "auditor@survivaloop.demo", "AUDITOR"),
+    makeUser("admin", "Demo Admin", "admin@survivaloop.demo", "ADMIN", 0),
+    makeUser("sup", "Demo Supervisor", "supervisor@survivaloop.demo", "SUPERVISOR", 50),
+    makeUser("w1", "Demo Field Worker", "worker@survivaloop.demo", "FIELD_WORKER", 120),
+    makeUser("w2", "Sunita Jadhav", "worker2@survivaloop.demo", "FIELD_WORKER", 86),
+    makeUser("w3", "Imran Shaikh", "worker3@survivaloop.demo", "FIELD_WORKER", 42),
+    makeUser("aud", "Demo Auditor", "auditor@survivaloop.demo", "AUDITOR", 0),
   ];
 
   // ---- interventions catalog ----
@@ -205,6 +209,29 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
   if (scenarios.includes("duplicate_evidence")) doScenario("duplicate_evidence", { level: "MICRO_CLUSTER", id: cid(10) }, 2 * 3600_000, locOf(cid(10)));
 
   void centralRow;
+
+  // --- Seed explicitly requested open field tasks for demo-worker ---
+  if (opts.seedDemoTasks) {
+    const tId = () => newId();
+    const cLat = centralRow.lat as number;
+    const cLng = centralRow.lng as number;
+    const seedTask = (id: string, state: string, intId: string) => {
+      repo.createTask({
+        id, org_id: ORG, entity_level: "MICRO_CLUSTER", entity_id: central,
+        state, intervention_class_id: intId, decision_id: null,
+        lat: cLat + (rng() - 0.5) * 0.005, lng: cLng + (rng() - 0.5) * 0.005,
+        created_at: NOW_BASE - 3600_000, dispatched_at: NOW_BASE - 3000_000,
+        accepted_at: state === "ACCEPTED" ? NOW_BASE - 2000_000 : null,
+        sla_created_at: NOW_BASE - 3600_000, sla_deadline: NOW_BASE + 24 * 3600_000,
+        sla_state: "NORMAL", assigned_worker_ids_json: JSON.stringify(["u_w1"]), simulated: 1,
+      });
+    };
+    seedTask(tId(), "DISPATCHED", "int_water");
+    seedTask(tId(), "DISPATCHED", "int_water");
+    seedTask(tId(), "ACCEPTED", "int_inspect");
+    seedTask(tId(), "DISPATCHED", "int_inspect");
+    seedTask(tId(), "DISPATCHED", "int_stake");
+  }
 
   return {
     orgId: ORG,

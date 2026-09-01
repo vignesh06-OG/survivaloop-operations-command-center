@@ -13,7 +13,7 @@ import type { Repo, DbRow } from "@/data/repo";
 import POLICY from "@/domain/policy";
 import { verifyProof } from "@/domain/verification";
 import { canActOnTask, roleHas } from "@/domain/permissions";
-import type { ExecutionProof, Role } from "@/domain/types";
+import type { ExecutionProof, Role, User } from "@/domain/types";
 import { newId } from "@/domain/audit";
 import type { Clock } from "./decision-service";
 import type { SessionUser } from "./auth";
@@ -101,6 +101,11 @@ export class VerificationService {
       final = "FLAGGED";
     }
 
+    let pointsAwarded = 0;
+    if (final === "AUTO_PASS") {
+      pointsAwarded = this.awardPoints(proof.worker_id as string, task, proof);
+    }
+
     this.repo.tx(() => {
       this.repo.updateProof(proofId, {
         verification_status: final,
@@ -141,6 +146,11 @@ export class VerificationService {
     if (!roleHas(actor.role, "review_proof")) throw new PermissionDeniedError(actor.id, "Role cannot review proof.");
     if (!reason.trim()) throw new Error("A review reason is required.");
 
+    let pointsAwarded = 0;
+    if (decision === "VERIFIED") {
+      pointsAwarded = this.awardPoints(proof.worker_id as string, task, proof);
+    }
+
     this.repo.tx(() => {
       this.repo.updateProof(proofId, {
         verification_status: decision,
@@ -163,6 +173,31 @@ export class VerificationService {
       this.repo.appendAudit(this.audit(task.org_id as string, actor, "HUMAN_REVIEW", "PROOF", proofId, proof.verification_status as string, decision, reason, {}));
     });
     return this.repo.getProof(proofId)!;
+  }
+
+  private awardPoints(workerId: string, task: DbRow, proof: DbRow): number {
+    // Anti-fraud: same tree/task cannot score twice same day
+    // For simplicity in demo, if the user already has VERIFIED proof for this task, don't award.
+    // In memory-repo we can just check if the user already scored today for this task.
+    // However, since a task is uniquely completed once, we just check if any OTHER proof for this task was verified.
+    const allProofs = this.repo.listProofsForTask ? this.repo.listProofsForTask(task.id as string) : [];
+    const alreadyScored = allProofs.some(p => p.verification_status === "VERIFIED" || p.verification_status === "AUTO_PASS");
+    if (alreadyScored) return 0; // already got points
+
+    // Award +10 for ACT/Water, +6 for INSPECT
+    const iv = this.repo.getIntervention(task.intervention_class_id as string);
+    let pts = 0;
+    if (iv?.code.includes("INSPECT")) pts = 6;
+    else pts = 10;
+
+    // Update user points
+    if ('updateUser' in this.repo && 'getUser' in this.repo) {
+      const u = (this.repo as any).getUser(workerId) as User;
+      if (u) {
+        (this.repo as any).updateUser(workerId, { points: (u.points || 0) + pts });
+      }
+    }
+    return pts;
   }
 
   /** Record a biological outcome (separate from execution/proof). */

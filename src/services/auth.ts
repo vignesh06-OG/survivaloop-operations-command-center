@@ -90,9 +90,21 @@ export interface VerifiedSession extends SessionUser {
 export async function verifySession(token: string): Promise<VerifiedSession | null> {
   try {
     const { payload } = await jwtVerify(token, secret());
-    // Reload user from DB to obtain authoritative role+org (never trust the token's role alone).
     const sub = payload.sub;
     if (!sub) return null;
+
+    if (process.env.DEMO_MODE === "1" || process.env.DEMO_MODE === "true") {
+      return {
+        id: sub,
+        sub,
+        orgId: payload.orgId as string,
+        email: payload.email as string,
+        name: payload.name as string,
+        role: payload.role as Role,
+        dataMode: payload.dataMode as "LIVE" | "SIMULATED",
+      };
+    }
+
     const user = (await requireRepo().getUser(sub)) as DbRow | null;
     if (!user) { console.error("[auth] user not found:", sub); return null; }
     return {

@@ -17,8 +17,9 @@ import LanguageSelector from "./LanguageSelector";
 import { Logo } from "@/components/Logo";
 import StatsHeader from "./StatsHeader";
 import BottomNav from "./BottomNav";
+import ProfileModal from "./ProfileModal";
 
-interface Me { id: string; name: string; email: string; role: string; orgId: string; dataMode: string }
+interface Me { id: string; name: string; email: string; role: string; orgId: string; dataMode: string; age?: number; city?: string; locality?: string; points: number }
 
 export default function CommandCenter() {
   const { t, lang } = useTranslation();
@@ -39,7 +40,7 @@ export default function CommandCenter() {
     try {
       // 1. Fetch user with a timeout (3s) to prevent infinite hanging
       const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 3000);
+      const timeoutId = setTimeout(() => abortController.abort(), 2000);
       
       let m;
       try {
@@ -53,10 +54,10 @@ export default function CommandCenter() {
       }
       
       if (!m || !m.user) { setMe(null); setLoading(false); return; }
-      if (m.user.role === "FIELD_WORKER" && window.location.pathname !== "/field") { window.location.href = "/field"; return; }
-      if (m.user.role === "ADMIN" && window.location.pathname !== "/admin") { window.location.href = "/admin"; return; }
-      if (m.user.role === "AUDITOR" && window.location.pathname !== "/audit") { window.location.href = "/audit"; return; }
-      if (m.user.role === "SUPERVISOR" && window.location.pathname !== "/") { window.location.href = "/"; return; }
+      if (m.user.role === "FIELD_WORKER" && window.location.pathname !== "/field") { window.location.assign("/field"); return; }
+      if (m.user.role === "ADMIN" && window.location.pathname !== "/admin") { window.location.assign("/admin"); return; }
+      if (m.user.role === "AUDITOR" && window.location.pathname !== "/audit") { window.location.assign("/audit"); return; }
+      if (m.user.role === "SUPERVISOR" && window.location.pathname !== "/") { window.location.assign("/"); return; }
       
       setMe(m.user);
       const [o, ent, zs] = await Promise.all([
@@ -190,6 +191,7 @@ export default function CommandCenter() {
   const selectedCluster = clusters.find((c) => c.id === selected);
   return (
     <div className="min-h-screen flex flex-col p-3">
+      <ProfileModal user={me} onComplete={refresh} />
       <Header me={me} onLogout={async () => { await api("/api/auth/logout", { method: "POST" }); setMe(null); }} onRunSim={refresh} />
       <StatsHeader oversight={oversight} />
 

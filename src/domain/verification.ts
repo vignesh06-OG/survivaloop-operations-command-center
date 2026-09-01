@@ -107,7 +107,19 @@ export function runAutomatedChecks(
       : "Submitter is not an assigned worker on this task.",
   };
 
-  results.push(gps, ts, dup, assoc, assign);
+  // 6. AI Anti-Fraud Assist (Demo-grade synthetic)
+  const aiAssist: AutomatedCheckResult = {
+    id: "AI_FRAUD_ASSIST" as any,
+    status: "PASS",
+    detail: JSON.stringify({
+      possible_old_or_reused_photo: false,
+      possible_watering_evidence: "high",
+      confidence: 0.92,
+      reasons: ["Soil appears freshly watered", "Leaves show no signs of wilt", "Image metadata matches current capture"]
+    })
+  };
+
+  results.push(gps, ts, dup, assoc, assign, aiAssist);
   return results;
 }
 

@@ -62,6 +62,7 @@ export function ensureSimulation(): void {
         "sudden_distress", "false_report", "stale_evidence",
         "worker_absence", "duplicate_evidence",
       ],
+      seedDemoTasks: true,
     });
   }
 }
