@@ -40,7 +40,7 @@ export default function CommandCenter() {
     try {
       // 1. Fetch user with a timeout (3s) to prevent infinite hanging
       const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 1500);
+      const timeoutId = setTimeout(() => abortController.abort(), 8000);
       
       let m;
       try {

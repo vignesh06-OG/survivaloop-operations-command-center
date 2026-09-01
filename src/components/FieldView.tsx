@@ -23,7 +23,7 @@ export default function FieldView() {
   const refresh = useCallback(async () => {
     try {
       const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 1500);
+      const timeoutId = setTimeout(() => abortController.abort(), 8000);
       let res;
       try {
         res = await fetch("/api/auth/me", { signal: abortController.signal });
