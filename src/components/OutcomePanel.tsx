@@ -114,7 +114,7 @@ export default function OutcomePanel({
           {!outcome && canRecord && (
             <button 
               onClick={() => setModalOpen(true)}
-              className="px-4 py-2 bg-[#10b981] hover:bg-[#059669] text-white text-xs font-bold rounded-lg transition-colors shadow-lg"
+              className="outcome-record-btn px-4 py-2 bg-[#10b981] hover:bg-[#059669] text-white text-xs font-bold rounded-lg transition-colors shadow-lg"
             >
               Record Outcome
             </button>
@@ -253,7 +253,7 @@ function RecordOutcomeModal({ entityLevel, entityId, taskId, evidenceIds, onClos
           <button 
             disabled={busy}
             onClick={handleSubmit}
-            className="w-full py-3 bg-[#10b981] hover:bg-[#059669] text-white font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50"
+            className="outcome-survived-btn w-full py-3 bg-[#10b981] hover:bg-[#059669] text-white font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50"
           >
             {busy ? "Submitting..." : "Close Loop & Submit"}
           </button>

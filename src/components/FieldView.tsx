@@ -6,6 +6,7 @@ import { FALLBACK_TASK_COLOR } from "@/lib/present";
 import type { TaskView } from "./TaskPipeline";
 import { useTranslation } from "@/lib/i18n/I18nContext";
 import PhotoUpload from "./PhotoUpload";
+import BottomNav from "./BottomNav";
 
 interface Me { id: string; name: string; email: string; role: string; orgId: string; dataMode: string }
 
@@ -42,9 +43,26 @@ export default function FieldView() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     setIsOnline(navigator.onLine);
+    
+    const handleDemoAction = (e: any) => {
+      const type = e.detail?.type;
+      if (type === "FIELD_TASK") {
+        setTimeout(() => {
+          const startBtn = document.querySelector(".demo-shuru-karo-btn") as HTMLButtonElement;
+          if (startBtn) startBtn.click();
+          setTimeout(() => {
+            const endBtn = document.querySelector(".demo-task-poora-btn") as HTMLButtonElement;
+            if (endBtn) endBtn.click();
+          }, 3000); // 3 seconds later
+        }, 1000);
+      }
+    };
+    window.addEventListener("demo-action", handleDemoAction);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('demo-action', handleDemoAction);
     };
   }, [refresh]);
 
@@ -101,7 +119,7 @@ export default function FieldView() {
 }
 
 function TaskCard({ task, onNext, lang, isOnline }: { task: TaskView; onNext: () => void; lang: string; isOnline: boolean }) {
-  const { speechCode } = useTranslation();
+  const { t, speechCode } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -234,16 +252,16 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: TaskView; onNext: ()
             target="_blank" 
             className="flex items-center justify-center gap-3 w-full py-4 bg-[#2563eb] text-white text-xl font-bold rounded-2xl active:scale-95 transition-transform mt-4"
           >
-            <span className="text-2xl">🗺️</span> Rasta Dekho
+            {t("field.rastaDekho")}
           </a>
         </div>
 
         <button 
           disabled={busy} 
           onClick={() => handleTransition("IN_PROGRESS")}
-          className="w-full h-20 bg-[#10b981] text-white text-2xl font-black rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.4)] active:bg-[#059669] transition-colors mt-auto flex items-center justify-center gap-3"
+          className="demo-shuru-karo-btn w-full h-20 bg-[#10b981] text-white text-2xl font-black rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.4)] active:bg-[#059669] transition-colors mt-auto flex items-center justify-center gap-3"
         >
-          {busy ? "RUKIYE..." : "▶️ SHURU KARO"}
+          {busy ? t("field.rukiye") : t("field.shuruKaro")}
         </button>
       </div>
     );
@@ -274,13 +292,13 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: TaskView; onNext: ()
             onClick={toggleListen}
             className={`w-full py-4 text-xl font-bold rounded-2xl flex items-center justify-center gap-3 transition-colors shadow-lg ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-[#1a232f] border border-[var(--line)] text-white active:bg-[#2d3b4a]'}`}
           >
-            <span className="text-2xl">🎤</span> {isListening ? "Sun raha hai..." : "Bolke Note Do"}
+            {isListening ? t("field.sunRaha") : t("field.bolkeNote")}
           </button>
           
           <textarea 
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Aap yahan type bhi kar sakte hain..."
+            placeholder={t("field.typeYahan")}
             className="w-full p-4 bg-[#0b0f14] border border-[var(--line)] rounded-xl text-lg text-white focus:border-[#10b981] outline-none min-h-[120px]"
           />
         </div>
@@ -290,15 +308,17 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: TaskView; onNext: ()
         <button 
           disabled={busy} 
           onClick={handleComplete}
-          className="w-full h-20 bg-[#10b981] text-white text-2xl font-black rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.4)] active:bg-[#059669] transition-colors flex items-center justify-center gap-3"
+          className="demo-task-poora-btn w-full h-20 bg-[#10b981] text-white text-2xl font-black rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.4)] active:bg-[#059669] transition-colors flex items-center justify-center gap-3"
         >
-          {busy ? "RUKIYE..." : "✅ TASK POORA KIYA"}
+          {busy ? t("field.rukiye") : t("field.taskPoora")}
         </button>
 
         <button className="w-full py-4 bg-transparent border border-red-500/50 text-red-500 text-lg font-bold rounded-2xl active:bg-red-950 transition-colors flex items-center justify-center gap-2">
-          ⚠️ Problem Report Karo
+          {t("field.problemReport")}
         </button>
       </div>
+      
+      <BottomNav role="FIELD_WORKER" />
     </div>
   );
 }

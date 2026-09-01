@@ -234,8 +234,8 @@ export default function FieldAssistant({ task, onRefresh, onClose }: Props) {
           <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
               msg.role === "user"
-                ? "bg-[#0ea5e9] text-white rounded-br-md"
-                : "bg-[#1a232f] text-[#e6edf3] border border-[var(--line)] rounded-bl-md"
+                ? "bg-[#0ea5e9] text-white rounded-ee-md"
+                : "bg-[#1a232f] text-[#e6edf3] border border-[var(--line)] rounded-es-md"
             }`}>
               {msg.role === "assistant" && (
                 <div className="text-[9px] text-[#fbbf24] font-bold mb-1 uppercase tracking-wider">AI Suggestion</div>

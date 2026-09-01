@@ -186,7 +186,7 @@ export default function MapCanvas({ data, selected, onSelect }: {
   const origin = { x: 10.5, y: 16 };
 
   const selCluster = selected ? data.clusters.find((c) => c.id === selected) : null;
-  const sectorLabel = (target?.zone ?? selCluster?.zone) ?? "NW QUADRANT";
+  const sectorLabel = (target?.zone ?? selCluster?.zone) ?? (t("map.quadrant") || "NW QUADRANT");
   const coordLat = target?.lat ?? 12.9784;
   const coordLng = target?.lng ?? 77.3964;
 
@@ -225,14 +225,14 @@ export default function MapCanvas({ data, selected, onSelect }: {
       <div className="gis-hud" style={{ position: "absolute", left: 12, top: 12, minWidth: 150, zIndex: 20 }}>
         <div className="flex items-center gap-1.5">
           <span style={{ width: 7, height: 7, borderRadius: 2, background: "#34d399", boxShadow: "0 0 6px #34d399" }} />
-          <span className="k">{t("map.sector")}</span>
+          <span className="k">{t("common.sector") || "SECTOR"}</span>
         </div>
         <div className="text-[12px] font-bold text-[#eef5f0]">{sectorLabel}</div>
         <div className="text-[10px] text-[#9fb2a4]">{target?.name ?? "Agri-Zone 2"} · {data.simulatedNote ? t("nav.simulatedData") : t("nav.liveData")}</div>
       </div>
 
       <div className="gis-hud" style={{ position: "absolute", right: 12, top: 12, textAlign: "right", zIndex: 20 }}>
-        <div className="k">{t("map.sector")}</div>
+        <div className="k">{t("common.sector") || "SECTOR"}</div>
         <div className="mono text-[11px] font-bold text-[#eef5f0]">{t("map.lat")} {coordLat.toFixed(4)}</div>
         <div className="mono text-[11px] font-bold text-[#eef5f0]">{t("map.lng")} {coordLng.toFixed(4)}</div>
       </div>

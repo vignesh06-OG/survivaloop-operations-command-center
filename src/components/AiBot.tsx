@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/lib/i18n/I18nContext";
+import { Logo } from "@/components/Logo";
 import PhotoUpload from "./PhotoUpload";
 
 type ChatMessage = {
@@ -34,14 +35,29 @@ export default function AiBot() {
         {
           id: "sys_1",
           role: "assistant",
-          content: lang === "hi" 
-            ? "नमस्ते! मैं आपका एआई फील्ड असिस्टेंट हूँ। आप बोलकर शिकायत दर्ज कर सकते हैं या किसी पेड़ की फोटो डालकर उसकी बीमारी जाँच सकते हैं।" 
-            : "Hello! I am your AI Field Assistant. You can speak to register a complaint or upload a tree photo to check its health.",
+          content: t("aiBot.welcomeMessage"),
           ts: Date.now()
         }
       ]);
     }
+    
+    // Dispatch event for other components (like BottomNav) to react
+    window.dispatchEvent(new CustomEvent("bot-state-change", { detail: { isOpen } }));
   }, [isOpen, messages.length, lang]);
+
+  useEffect(() => {
+    const handleDemoAction = (e: any) => {
+      const type = e.detail?.type;
+      if (type === "OPEN_BOT") {
+        setIsOpen(true);
+        setTimeout(() => {
+          handleSend(lang === "hi" ? "यहाँ पानी की पाइपलाइन टूट गई है" : "The water pipeline is broken here");
+        }, 1500);
+      }
+    };
+    window.addEventListener("demo-action", handleDemoAction);
+    return () => window.removeEventListener("demo-action", handleDemoAction);
+  }, [lang]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -240,13 +256,13 @@ export default function AiBot() {
       {isOpen && (
         <div className="fixed bottom-6 right-6 w-[380px] h-[550px] bg-[#0b0f14] border border-[#2d3b4a] rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50">
           {/* Header */}
-          <div className="p-4 bg-gradient-to-r from-[#121820] to-[#1a232f] border-b border-[var(--line)] flex justify-between items-center">
+          <div className="p-4 bg-gradient-to-r from-[#121820] to-[#1a232f] border-b border-[var(--line)] flex justify-between items-center dir-override">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#10b981] to-[#059669] flex items-center justify-center text-xl shadow-lg">
-                🤖
+              <div className="w-10 h-10 flex items-center justify-center">
+                <Logo variant="icon-only" />
               </div>
               <div>
-                <h3 className="font-bold text-white text-sm">SurvivaLoop Assistant</h3>
+                <h3 className="font-bold text-white text-sm">{t("ai.assistantTitle") || "SurvivaLoop Assistant"}</h3>
                 <p className="text-[10px] text-[#10b981] font-bold tracking-wider uppercase">Voice & Vision AI</p>
               </div>
             </div>
@@ -254,15 +270,15 @@ export default function AiBot() {
           </div>
 
           {/* Quick Actions */}
-          <div className="px-4 py-2 bg-[#121820] border-b border-[var(--line)] flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
+          <div className="px-4 py-2 bg-[#121820] border-b border-[var(--line)] flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide dir-override">
             <button onClick={() => setMessages(prev => [...prev, {id: "t_"+Date.now(), role: "system", content: "To check tree health, please upload a photo using the + button below.", ts: Date.now()}])} className="px-3 py-1.5 bg-[#1a232f] border border-[var(--line)] rounded-full text-xs text-[var(--muted)] hover:text-white hover:border-[#10b981] transition-colors">
-              🌳 Tree Health
+              🌳 {t("aiBot.quickActions.treeHealth")}
             </button>
             <button onClick={() => handleSend("I want to register a complaint.")} className="px-3 py-1.5 bg-[#1a232f] border border-[var(--line)] rounded-full text-xs text-[var(--muted)] hover:text-white hover:border-[#10b981] transition-colors">
-              📝 Complaint
+              📝 {t("aiBot.quickActions.complaint")}
             </button>
             <button onClick={() => handleSend("Where are my tasks?")} className="px-3 py-1.5 bg-[#1a232f] border border-[var(--line)] rounded-full text-xs text-[var(--muted)] hover:text-white hover:border-[#10b981] transition-colors">
-              📋 My Tasks
+              📋 {t("aiBot.quickActions.myTasks")}
             </button>
           </div>
 
@@ -270,7 +286,7 @@ export default function AiBot() {
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0b0f14]">
             {messages.map(msg => (
               <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[85%] rounded-2xl p-3 text-sm ${msg.role === "user" ? "bg-[#3b82f6] text-white rounded-tr-sm" : msg.role === "system" ? "bg-red-900/20 text-red-400 border border-red-900/50 rounded-tl-sm w-full text-center text-xs" : "bg-[#1a232f] text-gray-200 border border-[var(--line)] rounded-tl-sm"}`}>
+                <div className={`max-w-[85%] rounded-2xl p-3 text-sm ${msg.role === "user" ? "bg-[#3b82f6] text-white rounded-se-sm" : msg.role === "system" ? "bg-red-900/20 text-red-400 border border-red-900/50 rounded-ss-sm w-full text-center text-xs" : "bg-[#1a232f] text-gray-200 border border-[var(--line)] rounded-ss-sm"}`}>
                   {msg.image && <img src={msg.image} alt="upload" className="w-full h-32 object-cover rounded-lg mb-2" />}
                   {msg.content}
                   
@@ -325,7 +341,7 @@ export default function AiBot() {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              placeholder={isListening ? "Listening..." : "Type or speak..."}
+              placeholder={isListening ? t("aiBot.listening") || "Listening..." : t("aiBot.typeOrSpeakPlaceholder") || "Type or speak..."}
               className="flex-1 bg-transparent border-none text-sm text-white outline-none px-2 placeholder-[var(--muted)]"
             />
             

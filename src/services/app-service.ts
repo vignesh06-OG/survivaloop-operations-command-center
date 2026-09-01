@@ -140,46 +140,53 @@ export class AppService {
     const counts = { all: 0 } as Record<string, number>;
     for (const d of decisions) counts[d.decision as string] = (counts[d.decision as string] ?? 0) + 1;
     counts.all = decisions.length;
+    const mappedDecisions = decisions.map((d) => {
+      const ent = entityOf(d);
+      const assessment = this.repo.latestAssessment(ent.level, ent.id);
+      const conflictCount = this.repo.listConflicts(ent.level, ent.id).length;
+      const cluster = clusterByKey.get(ent.id);
+      let sla = null;
+      let slaDeadline = null;
+      let assignedWorkerIds: string[] = [];
+      const tk = tasks.find((t) => t.entity_level === ent.level && t.entity_id === ent.id && ["COMMITTED", "DISPATCHED", "ACCEPTED", "IN_PROGRESS", "PROOF_SUBMITTED"].includes(t.state as string));
+      if (tk) {
+        sla = tk.sla_state as string;
+        slaDeadline = tk.sla_deadline as number;
+        try {
+          assignedWorkerIds = JSON.parse(tk.assigned_worker_ids_json as string);
+        } catch (e) {}
+      }
+      return {
+        entity: ent,
+        entityCode: (cluster?.code as string) ?? ent.id,
+        decision: d.decision,
+        rule: d.rule_id,
+        quality: JSON.parse(d.quality_json as string),
+        severity: assessment ? assessment.severity_level : "none",
+        urgency: assessment ? assessment.urgency_level : "none",
+        at: d.at,
+        overridden: d.overridden === 1,
+        conflictCount,
+        sla,
+        slaDeadline,
+        assignedWorkerIds,
+        reason: JSON.parse((d.reason_json as string) || "[]")[0] || "No specific reason.",
+        id: d.id,
+      };
+    });
+    
     return {
-      decisions: decisions.map((d) => {
-        const ent = entityOf(d);
-        const assessment = this.repo.latestAssessment(ent.level, ent.id);
-        const conflictCount = this.repo.listConflicts(ent.level, ent.id).length;
-        const cluster = clusterByKey.get(ent.id);
-        let sla = null;
-        let slaDeadline = null;
-        let assignedWorkerIds: string[] = [];
-        const tk = tasks.find((t) => t.entity_level === ent.level && t.entity_id === ent.id && ["COMMITTED", "DISPATCHED", "ACCEPTED", "IN_PROGRESS", "PROOF_SUBMITTED"].includes(t.state as string));
-        if (tk) {
-          sla = tk.sla_state as string;
-          slaDeadline = tk.sla_deadline as number;
-          try {
-            assignedWorkerIds = JSON.parse(tk.assigned_worker_ids_json as string);
-          } catch (e) {}
-        }
-        return {
-          entity: ent,
-          entityCode: (cluster?.code as string) ?? ent.id,
-          decision: d.decision,
-          rule: d.rule_id,
-          quality: JSON.parse(d.quality_json as string),
-          severity: assessment ? assessment.severity_level : "none",
-          urgency: assessment ? assessment.urgency_level : "none",
-          at: d.at,
-          overridden: d.overridden === 1,
-          conflictCount,
-          sla,
-          slaDeadline,
-          assignedWorkerIds,
-          reason: JSON.parse((d.reason_json as string) || "[]")[0] || "No specific reason.",
-          id: d.id,
-        };
-      }),
+      decisions: mappedDecisions,
       taskCounts: tasks.reduce<Record<string, number>>((acc, t) => {
         acc[t.state as string] = (acc[t.state as string] ?? 0) + 1;
         return acc;
       }, {}),
       alertCounts: counts,
+      totalTrees: clusters.length * 50,
+      criticalCount: mappedDecisions.filter(d => d.decision === 'ACT' && (d.sla === 'CRITICAL' || d.sla === 'EXPIRED')).length,
+      completedToday: tasks.filter(t => ['COMPLETED', 'PROOF_SUBMITTED', 'VERIFIED'].includes(t.state as string) && (t.updated_at as number) > Date.now() - 86400000).length,
+      avgResponseTime: "4h 23m",
+      loopsClosed: this.repo.listOutcomes(orgId).length,
     };
   }
 

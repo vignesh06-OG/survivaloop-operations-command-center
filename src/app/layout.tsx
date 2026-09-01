@@ -7,16 +7,21 @@ export const metadata: Metadata = {
 };
 
 import { I18nProvider } from "@/lib/i18n/I18nContext";
+import { ThemeProvider } from "@/lib/theme";
 import AiBot from "@/components/AiBot";
+import AutoDemo from "@/components/AutoDemo";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <I18nProvider>
-          {children}
-          <AiBot />
-        </I18nProvider>
+        <ThemeProvider>
+          <I18nProvider>
+            {children}
+            <AiBot />
+            <AutoDemo />
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

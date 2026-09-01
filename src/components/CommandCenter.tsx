@@ -6,12 +6,17 @@ import PriorityQueue, { type QueueItem } from "./PriorityQueue";
 import WhyPanel, { type WhyData } from "./WhyPanel";
 import MapCanvas, { type MapData } from "./MapCanvas";
 import RealMap from "./RealMap";
+import FallbackMap from "./FallbackMap";
 import TaskPipeline, { type TaskView } from "./TaskPipeline";
 import EvidenceTimeline, { type EvidenceView } from "./EvidenceTimeline";
 import OutcomePanel from "./OutcomePanel";
 import Verification, { type ProofView } from "./Verification";
 import { useTranslation } from "@/lib/i18n/I18nContext";
+import { useTheme } from "@/lib/theme";
 import LanguageSelector from "./LanguageSelector";
+import { Logo } from "@/components/Logo";
+import StatsHeader from "./StatsHeader";
+import BottomNav from "./BottomNav";
 
 interface Me { id: string; name: string; email: string; role: string; orgId: string; dataMode: string }
 
@@ -33,7 +38,11 @@ export default function CommandCenter() {
   const refresh = useCallback(async () => {
     const m = await api<{ user: Me | null }>("/api/auth/me");
     if (!m.user) { setMe(null); setLoading(false); return; }
-    if (m.user.role === "FIELD_WORKER") { window.location.href = "/field"; return; }
+    if (m.user.role === "FIELD_WORKER" && window.location.pathname !== "/field") { window.location.href = "/field"; return; }
+    if (m.user.role === "ADMIN" && window.location.pathname !== "/admin") { window.location.href = "/admin"; return; }
+    if (m.user.role === "AUDITOR" && window.location.pathname !== "/audit") { window.location.href = "/audit"; return; }
+    if (m.user.role === "SUPERVISOR" && window.location.pathname !== "/") { window.location.href = "/"; return; }
+    
     setMe(m.user);
     const [o, ent, zs] = await Promise.all([
       api<any>("/api/oversight"),
@@ -46,7 +55,11 @@ export default function CommandCenter() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => { 
+    refresh(); 
+    const timer = setInterval(refresh, 60000);
+    return () => clearInterval(timer);
+  }, [refresh]);
 
   const loadDetail = useCallback(async (id: string) => {
     try {
@@ -59,6 +72,34 @@ export default function CommandCenter() {
     if (selected) loadDetail(selected);
     else setDetail(null);
   }, [selected, loadDetail]);
+
+  useEffect(() => {
+    const handleDemoAction = (e: any) => {
+      const type = e.detail?.type;
+      if (type === "SELECT_ENTITY") {
+        setSelected(e.detail.id);
+      } else if (type === "MAP_PAN") {
+        setUse3D(false);
+      } else if (type === "ZOOM_OUT") {
+        setSelected(null);
+      } else if (type === "SCROLL_QUEUE") {
+        const q = document.querySelector(".priority-queue-list");
+        if (q) q.scrollTo({ top: 100, behavior: "smooth" });
+      } else if (type === "RECORD_OUTCOME" && e.detail.id) {
+        setSelected(e.detail.id);
+        setTimeout(() => {
+          const btn = document.querySelector(".outcome-record-btn") as HTMLButtonElement;
+          if (btn) btn.click();
+          setTimeout(() => {
+            const survivedBtn = document.querySelector(".outcome-survived-btn") as HTMLButtonElement;
+            if (survivedBtn) survivedBtn.click();
+          }, 1000);
+        }, 1000);
+      }
+    };
+    window.addEventListener("demo-action", handleDemoAction);
+    return () => window.removeEventListener("demo-action", handleDemoAction);
+  }, []);
 
   async function onChanged() {
     await refresh();
@@ -130,11 +171,12 @@ export default function CommandCenter() {
   return (
     <div className="min-h-screen flex flex-col p-3">
       <Header me={me} onLogout={async () => { await api("/api/auth/logout", { method: "POST" }); setMe(null); }} onRunSim={refresh} />
+      <StatsHeader oversight={oversight} />
 
       <div className="flex-1 min-h-0 mt-3">
         <div className="command-body h-full">
           {/* ---- LEFT 20% : Intervention queue ---- */}
-          <div className="rail flex flex-col min-h-0">
+          <div className="rail flex flex-col min-h-0 order-2 lg:order-1">
             <div className="rail-scroll space-y-3 flex-1">
               <PriorityQueue items={queueItems} selected={selected} onSelect={setSelected} />
               {/* KPI mini-strip */}
@@ -148,18 +190,13 @@ export default function CommandCenter() {
           </div>
 
           {/* ---- CENTER 60% : realistic forest GIS (hero) ---- */}
-          <div className="center-col relative min-h-0">
-            {mapError && (
-              <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-amber-900/90 text-amber-200 px-4 py-2 rounded-lg text-xs shadow-lg border border-amber-500/50 flex items-center gap-2">
-                <span>⚠️</span> Satellite view requires a valid Mapbox API key. Defaulting to 3D map.
-              </div>
-            )}
+          <div className="center-col relative min-h-0 order-1 lg:order-2 h-[50vh] lg:h-full">
             <div className="absolute top-4 left-4 z-50 flex bg-[#121820] border border-[var(--line)] rounded-lg overflow-hidden shadow-lg">
               <button 
                 onClick={() => setUse3D(false)} 
                 className={`px-3 py-1.5 text-xs font-bold transition-colors ${!use3D ? 'bg-[#34d399] text-black' : 'text-[var(--muted)] hover:text-white'}`}
               >
-                🌐 Satellite
+                🌐 Map
               </button>
               <button 
                 onClick={() => setUse3D(true)} 
@@ -171,19 +208,19 @@ export default function CommandCenter() {
             {use3D ? (
               <MapCanvas data={mapData} selected={selected} onSelect={setSelected} />
             ) : (
-              <RealMap data={mapData} selected={selected} onSelect={setSelected} onError={() => { setUse3D(true); setMapError(true); }} />
+              <RealMap data={mapData} selected={selected} onSelect={setSelected} />
             )}
           </div>
 
           {/* ---- RIGHT 20% : audit log + detail ---- */}
-          <div className="rail flex flex-col min-h-0">
+          <div className="rail flex flex-col min-h-0 order-3">
             <div className="rail-scroll space-y-3 flex-1">
               {error && <div className="text-red-300 text-sm">{error}</div>}
               <div className="panel p-3">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0">
                     <h2 className="text-sm font-bold truncate">{selectedCluster?.code ?? selected ?? t("selectCase")}</h2>
-                    <div className="text-[11px] text-[var(--muted)] truncate">{selectedCluster?.name ?? "cluster"} {selected ? `· ${selected}` : ""}</div>
+                    <div className="text-[11px] text-[var(--muted)] truncate">{selectedCluster?.name ?? (t("common.cluster") || "cluster")} {selected ? `· ${selected}` : ""}</div>
                   </div>
                   {selected && (
                     <div className="flex gap-1.5 shrink-0">
@@ -234,6 +271,8 @@ export default function CommandCenter() {
           </div>
         </div>
       </div>
+      
+      <BottomNav role="SUPERVISOR" expiredCount={oversight?.alertCounts?.EXPIRED || 0} />
 
       <footer className="mt-3 shrink-0 text-[11px] text-[var(--muted)] text-center">
         {t("footer.demo", { dataMode: me.dataMode === "SIMULATED" ? t("footer.simulatedMode") : t("footer.liveMode") })}
@@ -247,13 +286,13 @@ export default function CommandCenter() {
 
 function Header({ me, onLogout, onRunSim }: { me: Me; onLogout: () => void; onRunSim: () => void }) {
   const { t } = useTranslation();
+  const { theme, toggleTheme } = useTheme();
   return (
     <header className="flex items-center justify-between py-2 border-b border-[var(--line)]">
       <div className="flex items-center gap-3">
-        <span className="text-xl">🌱</span>
-        <div>
-          <div className="font-bold leading-tight">{t("appTitle")}</div>
-          <div className="text-[11px] text-[var(--muted)]">{t("nav.commandCenter")}</div>
+        <Logo variant="header" className="mr-2" />
+        <div className="hidden sm:block">
+          <div className="text-[11px] text-[var(--muted)] font-medium tracking-wide uppercase mt-1">{t("nav.commandCenter")}</div>
         </div>
         <span className="pill ms-2 bg-amber-900/40 text-amber-200">{t("nav.simulatedData")}</span>
       </div>
@@ -261,6 +300,9 @@ function Header({ me, onLogout, onRunSim }: { me: Me; onLogout: () => void; onRu
         <LanguageSelector />
         <span className="pill bg-[#121820] border border-[var(--line)]">{t(`role.${me.role}`) || me.role}</span>
         <span className="text-[12px] text-[var(--muted)] hidden sm:inline">{me.name}</span>
+        <button className="btn text-[12px] px-2" onClick={toggleTheme} title="Toggle Theme">
+          {theme === "dark" ? "🌞" : "🌙"}
+        </button>
         <button className="btn text-[12px]" onClick={onRunSim}>{t("nav.seed")}</button>
         <button className="btn text-[12px]" onClick={onLogout}>{t("nav.logout")}</button>
       </div>

@@ -8,7 +8,9 @@
  * In production this file is replaced by a Postgres/PostGIS adapter that
  * satisfies the same method surface (see `/docs/postgres-schema.sql`).
  */
-import Database from "better-sqlite3";
+import type Database from "better-sqlite3";
+import { createRequire } from "node:module";
+const _require = typeof require !== "undefined" ? require : createRequire(import.meta.url);
 import { SQLITE_DDL } from "./sqlite-schema";
 import { newId } from "@/domain/audit";
 
@@ -33,7 +35,15 @@ export class Repo {
   private static readonly RESERVING_STATES = ["COMMITTED", "DISPATCHED", "ACCEPTED", "IN_PROGRESS"];
 
   constructor(filePath = ":memory:") {
-    this.db = new Database(filePath);
+    if (process.env.VERCEL === "1" || process.env.NODE_ENV === "production") {
+      throw new Error("Hard bypass: SQLite is disabled on Vercel/Production.");
+    }
+    try {
+      const dbModule = _require("better-sqlite3");
+      this.db = new dbModule(filePath);
+    } catch (err) {
+      throw new Error(`Failed to load better-sqlite3 or open DB: ${(err as Error).message}`);
+    }
     this.db.pragma("journal_mode = WAL");
     this.db.exec(SQLITE_DDL);
   }

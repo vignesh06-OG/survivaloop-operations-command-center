@@ -68,10 +68,13 @@ export function handleError(e: unknown): NextResponse {
   console.error("[survivaloop] error:", e);
   const msg = e instanceof Error ? e.message : "An unexpected error occurred.";
   // Known, client-safe domain errors remain informative; unknown → generic.
-  const safe = msg.toLowerCase().includes("sla") || msg.toLowerCase().includes("capacity")
-    || msg.toLowerCase().includes("proof") || msg.toLowerCase().includes("transition")
-    || msg.toLowerCase().includes("reason") || msg.toLowerCase().includes("not found")
-    || msg.toLowerCase().includes("invalid")
+  const msgLower = msg.toLowerCase();
+  const safe = msgLower.includes("sla") || msgLower.includes("capacity")
+    || msgLower.includes("proof") || msgLower.includes("transition")
+    || msgLower.includes("reason") || msgLower.includes("not found")
+    || msgLower.includes("invalid") || msgLower.includes("demo auth is disabled")
+    || msgLower.includes("survivaloop_jwt_secret") || msgLower.includes("database unavailable")
+    || msgLower.includes("demo")
     ? msg : "Unexpected error. Please retry.";
   return NextResponse.json({ error: safe }, { status: 400 });
 }

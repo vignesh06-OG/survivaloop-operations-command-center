@@ -86,10 +86,10 @@ export default function PriorityQueue({ items, selected, onSelect }: {
         
         {/* Filter Bar */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-bold no-scrollbar">
-          <button onClick={() => setFilter("ALL")} className={`px-3 py-1 rounded-full whitespace-nowrap ${filter === 'ALL' ? 'bg-[#34d399] text-black' : 'bg-[#1a232f] text-[var(--muted)]'}`}>Sab</button>
-          <button onClick={() => setFilter("ACTIVE")} className={`px-3 py-1 rounded-full whitespace-nowrap ${filter === 'ACTIVE' ? 'bg-[#3b82f6] text-white' : 'bg-[#1a232f] text-[var(--muted)]'}`}>Active</button>
-          <button onClick={() => setFilter("URGENT")} className={`px-3 py-1 rounded-full whitespace-nowrap ${filter === 'URGENT' ? 'bg-[#ef4444] text-white' : 'bg-[#1a232f] text-[var(--muted)]'}`}>Urgent</button>
-          <button onClick={() => setFilter("EXPIRED")} className={`px-3 py-1 rounded-full whitespace-nowrap ${filter === 'EXPIRED' ? 'bg-[#9333ea] text-white' : 'bg-[#1a232f] text-[var(--muted)]'}`}>Expired</button>
+          <button onClick={() => setFilter("ALL")} className={`px-3 py-1 rounded-full whitespace-nowrap ${filter === 'ALL' ? 'bg-[#34d399] text-black' : 'bg-[#1a232f] text-[var(--muted)]'}`}>{t("common.all") || "All"}</button>
+          <button onClick={() => setFilter("ACTIVE")} className={`px-3 py-1 rounded-full whitespace-nowrap ${filter === 'ACTIVE' ? 'bg-[#3b82f6] text-white' : 'bg-[#1a232f] text-[var(--muted)]'}`}>{t("common.active") || "Active"}</button>
+          <button onClick={() => setFilter("URGENT")} className={`px-3 py-1 rounded-full whitespace-nowrap ${filter === 'URGENT' ? 'bg-[#ef4444] text-white' : 'bg-[#1a232f] text-[var(--muted)]'}`}>{t("common.urgent") || "Urgent"}</button>
+          <button onClick={() => setFilter("EXPIRED")} className={`px-3 py-1 rounded-full whitespace-nowrap ${filter === 'EXPIRED' ? 'bg-[#9333ea] text-white' : 'bg-[#1a232f] text-[var(--muted)]'}`}>{t("common.expired") || "Expired"}</button>
         </div>
       </div>
 
@@ -104,19 +104,19 @@ export default function PriorityQueue({ items, selected, onSelect }: {
           let slaClass = "";
 
           if (isExpired) {
-            slaLabel = "ESCALATED";
+            slaLabel = t("common.escalated") || "ESCALATED";
             slaBg = "#4c1d95"; // Dark purple/red
             slaClass = "line-through text-gray-400";
           } else if (hrsLeft !== null) {
             if (hrsLeft < 4) {
-              slaLabel = "URGENT";
+              slaLabel = t("common.urgent") || "URGENT";
               slaBg = "#ef4444";
               slaClass = "animate-pulse";
             } else if (hrsLeft < 12) {
-              slaLabel = "Dhyan Do";
+              slaLabel = t("common.attention") || "Dhyan Do";
               slaBg = "#eab308";
             } else {
-              slaLabel = "Normal";
+              slaLabel = t("common.normal") || "Normal";
               slaBg = "#10b981";
             }
           }

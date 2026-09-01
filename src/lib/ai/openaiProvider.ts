@@ -4,11 +4,15 @@ import type { AiProvider, ChatMessage, TaskContext, AiResponse } from "./provide
 import { aiResponseSchema } from "./provider";
 
 export class OpenAiProvider implements AiProvider {
-  private client: OpenAI;
+  private client: OpenAI | null = null;
 
   constructor() {
     // The client reads OPENAI_API_KEY from process.env automatically.
-    this.client = new OpenAI();
+    try {
+      this.client = new OpenAI();
+    } catch (e) {
+      console.warn("[OpenAiProvider] Failed to initialize (missing OPENAI_API_KEY?)");
+    }
   }
 
   async chat(
@@ -16,6 +20,9 @@ export class OpenAiProvider implements AiProvider {
     context: TaskContext | null,
     locale: string
   ): Promise<AiResponse> {
+    if (!this.client) {
+      throw new Error("OpenAI client not initialized (missing API key)");
+    }
     const systemPrompt = this.buildSystemPrompt(context, locale);
 
     // Map history to OpenAI format.

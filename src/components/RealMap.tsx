@@ -1,13 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import * as maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { DECISION_COLORS, SLA_COLORS, FALLBACK_TASK_COLOR } from "@/lib/present";
 import { useTranslation } from "@/lib/i18n/I18nContext";
-import type { MapData } from "./MapCanvas"; // Import types from MapCanvas for consistency
-
-// Use token from environment variables
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+import type { MapData } from "./MapCanvas";
 
 export default function RealMap({ data, selected, onSelect, isFieldView, onError }: {
   data: MapData;
@@ -18,45 +15,56 @@ export default function RealMap({ data, selected, onSelect, isFieldView, onError
 }) {
   const { t } = useTranslation();
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<Record<string, mapboxgl.Marker>>({});
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const markersRef = useRef<Record<string, maplibregl.Marker>>({});
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
     if (mapRef.current) return; // Initialize once
 
-    const map = new mapboxgl.Map({
+    const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/satellite-streets-v12",
-      center: [78.96, 20.59], // India
-      zoom: 5,
-      pitch: 60,
+      style: {
+        version: 8,
+        sources: {
+          "esri-satellite": {
+            type: "raster",
+            tiles: [
+              "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            ],
+            tileSize: 256,
+            attribution: "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+          }
+        },
+        layers: [
+          {
+            id: "satellite",
+            type: "raster",
+            source: "esri-satellite",
+            minzoom: 0,
+            maxzoom: 22
+          }
+        ]
+      },
+      center: [73.7898, 19.9975], // Nashik region
+      zoom: 12,
+      pitch: 45,
       bearing: -17.6,
     });
     mapRef.current = map;
 
-    map.addControl(new mapboxgl.NavigationControl(), "top-right");
+    map.addControl(new maplibregl.NavigationControl({ showCompass: true, showZoom: true, visualizePitch: true }), "top-right");
     if (isFieldView) {
       map.addControl(
-        new mapboxgl.GeolocateControl({
+        new maplibregl.GeolocateControl({
           positionOptions: { enableHighAccuracy: true },
           trackUserLocation: true,
-          showUserHeading: true,
         }),
         "bottom-right"
       );
     }
 
     map.on("load", () => {
-      // Enable 3D terrain
-      map.addSource("mapbox-dem", {
-        type: "raster-dem",
-        url: "mapbox://mapbox.mapbox-terrain-dem-v1",
-        tileSize: 512,
-        maxzoom: 14,
-      });
-      map.setTerrain({ source: "mapbox-dem", exaggeration: 1.5 });
-
       // Add empty GeoJSON source for clustering
       map.addSource("clusters", {
         type: "geojson",
@@ -94,20 +102,20 @@ export default function RealMap({ data, selected, onSelect, isFieldView, onError
         filter: ["has", "point_count"],
         layout: {
           "text-field": "{point_count_abbreviated}",
-          "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+          "text-font": ["Arial Unicode MS Bold"],
           "text-size": 12,
         },
         paint: { "text-color": "#ffffff" },
       });
 
       // Zoom on cluster click
-      map.on("click", "clusters-layer", (e) => {
+      map.on("click", "clusters-layer", (e: any) => {
         const features = map.queryRenderedFeatures(e.point, { layers: ["clusters-layer"] });
         if (!features[0]) return;
         const clusterId = features[0].properties?.cluster_id;
-        const source = map.getSource("clusters") as mapboxgl.GeoJSONSource;
-        source.getClusterExpansionZoom(clusterId, (err, zoom) => {
-          if (err || zoom == null || !features[0].geometry || features[0].geometry.type !== "Point") return;
+        const source = map.getSource("clusters") as maplibregl.GeoJSONSource;
+        source.getClusterExpansionZoom(clusterId).then((zoom: any) => {
+          if (zoom == null || !features[0].geometry || features[0].geometry.type !== "Point") return;
           map.easeTo({
             center: features[0].geometry.coordinates as [number, number],
             zoom: zoom + 1,
@@ -121,13 +129,6 @@ export default function RealMap({ data, selected, onSelect, isFieldView, onError
       map.on("mouseleave", "clusters-layer", () => {
         map.getCanvas().style.cursor = "";
       });
-    });
-
-    map.on("error", (e: any) => {
-      console.error("Mapbox error", e);
-      if (e.error?.message?.includes("token") || e.error?.status === 401 || e.error?.status === 403) {
-        if (onError) onError();
-      }
     });
 
     return () => {
@@ -149,7 +150,7 @@ export default function RealMap({ data, selected, onSelect, isFieldView, onError
     }));
 
     const updateSource = () => {
-      const source = map.getSource("clusters") as mapboxgl.GeoJSONSource;
+      const source = map.getSource("clusters") as maplibregl.GeoJSONSource;
       if (source) {
         source.setData({ type: "FeatureCollection", features });
       }
@@ -158,13 +159,13 @@ export default function RealMap({ data, selected, onSelect, isFieldView, onError
 
     // Define function to update HTML markers based on unclustered points
     const updateMarkers = () => {
-      if (!map.isSourceLoaded("clusters")) return;
+      if (!map.getSource("clusters")) return;
       const unclustered = map.querySourceFeatures("clusters", {
         filter: ["!", ["has", "point_count"]],
       });
 
       // Keep track of visible markers to remove old ones
-      const visibleIds = new Set(unclustered.map((f) => f.properties?.id));
+      const visibleIds = new Set(unclustered.map((f: any) => f.properties?.id));
       
       Object.keys(markersRef.current).forEach((id) => {
         if (!visibleIds.has(id)) {
@@ -173,7 +174,7 @@ export default function RealMap({ data, selected, onSelect, isFieldView, onError
         }
       });
 
-      unclustered.forEach((f) => {
+      unclustered.forEach((f: any) => {
         if (f.geometry.type !== "Point") return;
         const props = f.properties;
         if (!props?.id) return;
@@ -217,20 +218,20 @@ export default function RealMap({ data, selected, onSelect, isFieldView, onError
             onSelect(props.id);
           };
 
-          // Popup
+          // Popup uses i18n
           const popupContent = `
             <div style="color: #333; padding: 4px;">
               <strong style="display:block; font-size: 14px; margin-bottom: 2px;">${props.code}</strong>
               <div style="font-size: 12px; margin-bottom: 4px;">${props.name}</div>
-              <div style="font-size: 11px;">Decision: <b>${props.decision || "N/A"}</b></div>
+              <div style="font-size: 11px;">${t("map.decision") || "Decision"}: <b>${props.decision || "N/A"}</b></div>
               <div style="font-size: 11px;">SLA: <b>${props.sla || "NORMAL"}</b></div>
               ${props.nEvidence ? `<div style="font-size: 11px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #ccc;">Evidence: <b>${props.nEvidence}</b></div>` : ""}
             </div>
           `;
 
-          const popup = new mapboxgl.Popup({ offset: 12, closeButton: false }).setHTML(popupContent);
+          const popup = new maplibregl.Popup({ offset: 12, closeButton: false }).setHTML(popupContent);
           
-          const marker = new mapboxgl.Marker({ element: el })
+          const marker = new maplibregl.Marker({ element: el })
             .setLngLat(f.geometry.coordinates as [number, number])
             .setPopup(popup)
             .addTo(map);
@@ -262,7 +263,7 @@ export default function RealMap({ data, selected, onSelect, isFieldView, onError
       map.off("data", updateMarkers);
       map.off("move", updateMarkers);
     };
-  }, [data, selected, onSelect]);
+  }, [data, selected, onSelect, t]); 
 
   // Fly to selected cluster
   useEffect(() => {
@@ -281,8 +282,8 @@ export default function RealMap({ data, selected, onSelect, isFieldView, onError
   }, [selected, data.clusters]);
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%", background: "#050806" }}>
-      <div ref={mapContainerRef} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+    <div style={{ position: "relative", width: "100%", height: "100%", minHeight: "400px", background: "#050806" }}>
+      <div ref={mapContainerRef} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, minHeight: "400px" }} />
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes ping {
           75%, 100% {
@@ -290,7 +291,7 @@ export default function RealMap({ data, selected, onSelect, isFieldView, onError
             opacity: 0;
           }
         }
-        .mapboxgl-popup-content {
+        .maplibregl-popup-content {
           border-radius: 8px;
           box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }

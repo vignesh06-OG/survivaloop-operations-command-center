@@ -16,7 +16,7 @@ export default function PhotoUpload({ entityType = "general", entityId = "unknow
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const localizedError = lang === "hi" ? "Photo 5MB se chhoti honi chahiye" : "Photo must be less than 5MB";
+  const localizedError = t("photoUpload.errorSize") || "Photo must be less than 5MB";
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -127,7 +127,7 @@ export default function PhotoUpload({ entityType = "general", entityId = "unknow
             className="hidden" 
             onChange={(e) => handleFiles(e.target.files)} 
           />
-          📷 Camera Se Lo
+          📷 {t("photoUpload.takeCamera")}
         </button>
         <button 
           onClick={() => fileInputRef.current?.click()}
@@ -141,7 +141,7 @@ export default function PhotoUpload({ entityType = "general", entityId = "unknow
             className="hidden" 
             onChange={(e) => handleFiles(e.target.files)} 
           />
-          🖼️ Gallery Se Chuno
+          🖼️ {t("photoUpload.selectGallery")}
         </button>
       </div>
       

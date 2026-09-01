@@ -15,17 +15,32 @@ export async function POST(
   { params }: { params: { role: string } },
 ) {
   try {
-    // Demo identity switch is NEVER available in production — otherwise anyone
-    // could elevate to ADMIN. Disabled entirely unless DEMO_MODE is explicitly on.
-    if (process.env.NODE_ENV === "production" && process.env.DEMO_MODE !== "1") {
-      return NextResponse.json({ error: "Demo auth is disabled." }, { status: 403 });
+    const demoMode = process.env.DEMO_MODE === "1" || process.env.DEMO_MODE === "true";
+    if (process.env.NODE_ENV === "production" && !demoMode) {
+      throw new HttpError(403, "DEMO_MODE_DISABLED: Demo authentication is only allowed when DEMO_MODE is enabled.");
     }
-    ensureSimulation();
+    if (!process.env.SURVIVALOOP_JWT_SECRET) {
+      throw new HttpError(500, "MISSING_JWT_SECRET: Production requires a secret.");
+    }
+
+    try {
+      ensureSimulation();
+    } catch (err) {
+      throw new HttpError(500, `SEED_FAILED: ${(err as Error).message}`);
+    }
+
     const role = params.role.toUpperCase();
     if (!(VALID as readonly string[]).includes(role)) {
       throw new HttpError(400, `Unknown role '${role}'.`);
     }
-    const { repo } = getCtx();
+    
+    let repo;
+    try {
+      repo = getCtx().repo;
+    } catch (err) {
+      throw new HttpError(500, `DB_INIT_FAILED: ${(err as Error).message}`);
+    }
+
     // Demo identity: for FIELD_WORKER, prefer the seeded worker that is actually
     // assigned to the dispatched demo task (u_w1) so the worker sees a live job.
     const candidates = repo.listUsers("org_demo").filter((u) => u.role === role);
@@ -35,19 +50,27 @@ export async function POST(
       candidates[0];
     if (!user) throw new HttpError(404, `No seeded user for role '${role}'.`);
 
-    const token = await signSession({
-      id: user.id as string,
-      orgId: user.org_id as string,
-      email: user.email as string,
-      name: user.name as string,
-      role: user.role as any,
-      dataMode: "SIMULATED",
-    });
+    let token;
+    try {
+      token = await signSession({
+        id: user.id as string,
+        orgId: user.org_id as string,
+        email: user.email as string,
+        name: user.name as string,
+        role: user.role as any,
+        dataMode: "SIMULATED",
+      });
+    } catch (err) {
+      throw new HttpError(500, `AUTH_FAILED: ${(err as Error).message}`);
+    }
 
     const res = NextResponse.json({ ok: true, role, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
     setSessionCookie(res, token);
     return res;
   } catch (e) {
+    if (e instanceof HttpError) {
+      return NextResponse.json({ error: e.message }, { status: e.status });
+    }
     return handleError(e);
   }
 }

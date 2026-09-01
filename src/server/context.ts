@@ -7,6 +7,7 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { Repo } from "@/data/repo";
+import { MemoryRepo } from "@/data/memory-repo";
 import { AppService } from "@/services/app-service";
 import { setRuntime, getRuntime, type Runtime } from "./runtime";
 import { buildSimulation } from "@/services/simulation";
@@ -15,10 +16,26 @@ const DB_PATH = process.env.SURVIVALOOP_DB ?? "data/survivaloop.sqlite";
 
 export function getCtx(): Runtime {
   if (runtimeReady()) return getRuntime();
-  if (DB_PATH !== ":memory:") {
-    try { mkdirSync(dirname(DB_PATH), { recursive: true }); } catch { /* ignore */ }
+
+  let repo: any;
+  const isVercel = process.env.VERCEL === "1";
+  const isProd = process.env.NODE_ENV === "production";
+
+  if (isVercel || isProd) {
+    console.warn("[context] Vercel/Production detected. Forcing MemoryRepo bypass.");
+    repo = new MemoryRepo();
+  } else {
+    if (DB_PATH !== ":memory:") {
+      try { mkdirSync(dirname(DB_PATH), { recursive: true }); } catch { /* ignore */ }
+    }
+    try {
+      repo = new Repo(DB_PATH);
+    } catch (e) {
+      console.warn("[context] Falling back to MemoryRepo due to:", (e as Error).message);
+      repo = new MemoryRepo();
+    }
   }
-  const repo = new Repo(DB_PATH);
+
   const app = new AppService(repo);
   setRuntime({ repo, app });
   return getRuntime();
