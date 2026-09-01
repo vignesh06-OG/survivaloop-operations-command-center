@@ -43,7 +43,7 @@ export function setSessionCookie(res: NextResponse, token: string): void {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 12 * 3600,
+    maxAge: 86400,
   });
 }
 

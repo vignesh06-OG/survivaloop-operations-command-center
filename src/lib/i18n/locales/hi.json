@@ -206,5 +206,17 @@
   "common.quadrant": "क्वाड्रेंट",
   "common.sector": "सेक्टर",
   "map.fallbackWarning": "सैटेलाइट दृश्य के लिए Mapbox कुंजी की आवश्यकता है। 3D मैप दिखा रहे हैं।",
-  "map.quadrant": "क्वाड्रेंट"
+  "map.quadrant": "क्वाड्रेंट",
+  "field.allTasksDone": "आज के सभी कार्य पूरे हो गए",
+  "field.youAreDone": "आपका काम हो गया",
+  "field.tasksToday": "कार्य आज",
+  "field.distanceAway": "{distance} दूर",
+  "field.getDirections": "रास्ता देखें",
+  "field.wait": "प्रतीक्षा करें...",
+  "field.startTask": "कार्य शुरू करें",
+  "field.completeTask": "कार्य पूरा करें",
+  "field.reportProblem": "समस्या दर्ज करें",
+  "field.listening": "सुन रहा हूँ...",
+  "field.voiceNote": "वॉइस नोट जोड़ें",
+  "field.typeHere": "यहाँ टाइप करें..."
 }

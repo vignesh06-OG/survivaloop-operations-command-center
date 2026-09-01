@@ -23,7 +23,7 @@ export default function FieldView() {
   const refresh = useCallback(async () => {
     try {
       const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 2000);
+      const timeoutId = setTimeout(() => abortController.abort(), 1500);
       let res;
       try {
         res = await fetch("/api/auth/me", { signal: abortController.signal });
@@ -201,7 +201,15 @@ export default function FieldView() {
   );
 }
 
-function TaskCard({ task, onNext, lang, isOnline }: { task: TaskView; onNext: () => void; lang: string; isOnline: boolean }) {
+// Updated TaskView definition to match API
+export interface FieldTaskView extends TaskView {
+  title?: string;
+  entityName?: string;
+  type?: string;
+  coordinates?: { lat: number; lng: number };
+}
+
+function TaskCard({ task, onNext, lang, isOnline }: { task: FieldTaskView; onNext: () => void; lang: string; isOnline: boolean }) {
   const { t, speechCode } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -216,16 +224,19 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: TaskView; onNext: ()
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
 
-  // Derive task icon based on intervention class
-  const getIcon = (ic: string) => {
-    if (ic.includes("WATER")) return "💧";
-    if (ic.includes("INSPECT")) return "🔍";
-    if (ic.includes("PRUNE") || ic.includes("REPAIR")) return "🛠️";
-    if (ic.includes("PLANT")) return "🌱";
+  // Derive task icon based on type (provided by API) or fallback
+  const getIcon = (type?: string, ic?: string) => {
+    if (type === "WATER" || (ic && ic.includes("WATER"))) return "💧";
+    if (type === "INSPECT" || (ic && ic.includes("INSPECT"))) return "🔍";
+    if (type === "REPAIR" || (ic && (ic.includes("PRUNE") || ic.includes("REPAIR")))) return "🛠️";
+    if (ic && ic.includes("PLANT")) return "🌱";
     return "📋";
   };
-  const icon = getIcon(task.intervention_class_id);
+  const icon = getIcon(task.type, task.intervention_class_id);
+  const typeLabel = task.type === "WATER" ? "Water" : task.type === "INSPECT" ? "Inspect" : task.type === "REPAIR" ? "Repair" : "Task";
   const distance = Math.floor(Math.random() * 800) + 100; // Mock distance for UI
+  const points = task.type === "WATER" ? 10 : task.type === "INSPECT" ? 5 : 15;
+
   
   const handleTransition = async (to: string) => {
     setBusy(true); setError(null);
@@ -318,33 +329,57 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: TaskView; onNext: ()
   if (localState !== "IN_PROGRESS" && localState !== "COMPLETED") {
     return (
       <div className="flex flex-col flex-1">
-        {error && <div className="p-4 bg-red-900 border border-red-500 rounded-xl mb-4 text-white text-lg">{error}</div>}
+        {error && <div className="p-4 bg-red-900 border border-red-500 rounded-xl mb-4 text-white text-lg shadow-md">{error}</div>}
         
-        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 p-4">
-          <div className="text-8xl">{icon}</div>
-          <h2 className="text-4xl font-black text-white leading-tight">{task.entity_id}</h2>
-          <div className="text-2xl text-[#34d399] font-bold">{distance}m door</div>
+        <div className="flex-1 flex flex-col bg-gradient-to-b from-[#1a232f] to-transparent p-6 rounded-2xl border border-[var(--line)] shadow-xl relative overflow-hidden mb-4">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#34d399]/10 rounded-bl-full blur-2xl"></div>
           
-          <div className="flex items-center gap-2 px-4 py-2 bg-[#1a232f] rounded-full border border-[var(--line)]">
-            <div className={`w-4 h-4 rounded-full ${task.sla_state === 'NORMAL' ? 'bg-[#10b981]' : 'bg-[#ef4444] animate-pulse'}`}></div>
-            <span className="text-lg font-bold text-white uppercase">{task.sla_state}</span>
+          {/* Top meta row */}
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-2 bg-[#0b0f14] px-3 py-1.5 rounded-full border border-[var(--line)] shadow-inner">
+              <span className="text-xl">{icon}</span>
+              <span className="text-sm font-bold text-white uppercase tracking-wider">{typeLabel}</span>
+            </div>
+            
+            <div className={`flex items-center gap-2 px-3 py-1.5 bg-[#0b0f14] rounded-full border border-[var(--line)] shadow-inner`}>
+              <div className={`w-2.5 h-2.5 rounded-full ${task.sla_state === 'NORMAL' ? 'bg-[#10b981]' : task.sla_state === 'CRITICAL' ? 'bg-[#ef4444] animate-pulse' : 'bg-[#eab308]'}`}></div>
+              <span className="text-xs font-bold text-white uppercase">{task.sla_state}</span>
+            </div>
+          </div>
+          
+          <h2 className="text-3xl font-black text-white leading-tight mb-2 drop-shadow-sm">{task.entityName || task.entity_id}</h2>
+          
+          <p className="text-lg text-[var(--muted)] mb-6 leading-relaxed">
+            {task.title || `Perform ${typeLabel.toLowerCase()} operations`}
+          </p>
+
+          <div className="flex flex-wrap gap-4 mt-auto">
+            <div className="flex items-center gap-2 bg-[#0b0f14] px-4 py-2 rounded-xl border border-[var(--line)]">
+              <span className="text-xl">📍</span>
+              <span className="text-sm font-bold text-[#34d399]">{t("field.distanceAway", { distance: distance + 'm' }) || `${distance}m away`}</span>
+            </div>
+            
+            <div className="flex items-center gap-2 bg-[#0b0f14] px-4 py-2 rounded-xl border border-[var(--line)]">
+              <span className="text-xl">⭐</span>
+              <span className="text-sm font-bold text-yellow-400">+{points} pts</span>
+            </div>
           </div>
 
           <a 
-            href={`https://maps.google.com/?q=12.97,77.39`} 
+            href={`https://maps.google.com/?q=${task.coordinates?.lat || 12.97},${task.coordinates?.lng || 77.39}`} 
             target="_blank" 
-            className="flex items-center justify-center gap-3 w-full py-4 bg-[#2563eb] text-white text-xl font-bold rounded-2xl active:scale-95 transition-transform mt-4"
+            className="flex items-center justify-center gap-2 w-full py-3 bg-[#2563eb] text-white text-sm font-bold rounded-xl active:scale-95 transition-transform mt-6 shadow-md"
           >
-            {t("field.rastaDekho")}
+            🗺️ {t("field.getDirections") || "Get Directions"}
           </a>
         </div>
 
         <button 
           disabled={busy} 
           onClick={() => handleTransition("IN_PROGRESS")}
-          className="demo-shuru-karo-btn w-full h-20 bg-[#10b981] text-white text-2xl font-black rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.4)] active:bg-[#059669] transition-colors mt-auto flex items-center justify-center gap-3"
+          className="demo-shuru-karo-btn w-full h-16 bg-gradient-to-r from-[#10b981] to-[#059669] text-white text-xl font-black rounded-2xl shadow-[0_4px_20px_rgba(16,185,129,0.3)] active:scale-[0.98] transition-all flex items-center justify-center gap-3 mt-auto"
         >
-          {busy ? t("field.rukiye") : t("field.shuruKaro")}
+          {busy ? t("field.wait") || "Wait..." : t("field.startTask") || "START TASK"}
         </button>
       </div>
     );
@@ -355,14 +390,14 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: TaskView; onNext: ()
     <div className="flex flex-col flex-1 overflow-y-auto">
       {error && <div className="p-4 bg-red-900 border border-red-500 rounded-xl mb-4 text-white text-lg">{error}</div>}
       
-      <div className="flex items-center justify-between mb-6 bg-[#1a232f] p-4 rounded-xl border border-[var(--line)]">
+      <div className="flex items-center justify-between mb-6 bg-[#1a232f] p-4 rounded-xl border border-[var(--line)] shadow-md">
         <div>
-          <h2 className="text-2xl font-black text-white">{task.entity_id}</h2>
-          <div className="text-lg text-[#34d399] font-bold flex items-center gap-1">
+          <h2 className="text-xl font-black text-white">{task.entityName || task.entity_id}</h2>
+          <div className="text-sm text-[#34d399] font-bold flex items-center gap-1 mt-1">
             <span className="animate-pulse">📍</span> GPS locked
           </div>
         </div>
-        <div className="text-4xl">{icon}</div>
+        <div className="text-3xl">{icon}</div>
       </div>
 
       <div className="space-y-6 flex-1">
@@ -375,13 +410,13 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: TaskView; onNext: ()
             onClick={toggleListen}
             className={`w-full py-4 text-xl font-bold rounded-2xl flex items-center justify-center gap-3 transition-colors shadow-lg ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-[#1a232f] border border-[var(--line)] text-white active:bg-[#2d3b4a]'}`}
           >
-            {isListening ? t("field.sunRaha") : t("field.bolkeNote")}
+            {isListening ? t("field.listening") || "Listening..." : t("field.voiceNote") || "Add Voice Note"}
           </button>
           
           <textarea 
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder={t("field.typeYahan")}
+            placeholder={t("field.typeHere") || "Type a note..."}
             className="w-full p-4 bg-[#0b0f14] border border-[var(--line)] rounded-xl text-lg text-white focus:border-[#10b981] outline-none min-h-[120px]"
           />
         </div>
@@ -391,13 +426,13 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: TaskView; onNext: ()
         <button 
           disabled={busy} 
           onClick={handleComplete}
-          className="demo-task-poora-btn w-full h-20 bg-[#10b981] text-white text-2xl font-black rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.4)] active:bg-[#059669] transition-colors flex items-center justify-center gap-3"
+          className="demo-task-poora-btn w-full h-16 bg-gradient-to-r from-[#10b981] to-[#059669] text-white text-xl font-black rounded-2xl shadow-[0_4px_20px_rgba(16,185,129,0.3)] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
         >
-          {busy ? t("field.rukiye") : t("field.taskPoora")}
+          {busy ? t("field.wait") || "Wait..." : t("field.completeTask") || "COMPLETE TASK"}
         </button>
 
-        <button className="w-full py-4 bg-transparent border border-red-500/50 text-red-500 text-lg font-bold rounded-2xl active:bg-red-950 transition-colors flex items-center justify-center gap-2">
-          {t("field.problemReport")}
+        <button className="w-full py-4 bg-transparent border border-red-500/50 text-red-500 text-sm font-bold rounded-xl active:bg-red-950 transition-colors flex items-center justify-center gap-2">
+          {t("field.reportProblem") || "Report a Problem"}
         </button>
       </div>
       

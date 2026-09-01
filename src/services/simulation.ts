@@ -64,21 +64,20 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
   repo.createOrg({ id: ORG, name: "Riverside Greenbelt Pilot", dataMode: "SIMULATED" });
 
   const makeUser = (id: string, name: string, email: string, role: string, points = 0) => {
-    const uid = `u_${id}`;
     repo.createUser({ 
-      id: uid, orgId: ORG, email, name, role, 
+      id, orgId: ORG, email, name, role, 
       passwordHash: hashPassword("demo"),
       points, city: "Pune", locality: "Riverside", age: 30
     });
-    return { id: uid, email, role };
+    return { id, email, role };
   };
   const users = [
-    makeUser("admin", "Demo Admin", "admin@survivaloop.demo", "ADMIN", 0),
-    makeUser("sup", "Demo Supervisor", "supervisor@survivaloop.demo", "SUPERVISOR", 50),
-    makeUser("w1", "Demo Field Worker", "worker@survivaloop.demo", "FIELD_WORKER", 120),
-    makeUser("w2", "Sunita Jadhav", "worker2@survivaloop.demo", "FIELD_WORKER", 86),
-    makeUser("w3", "Imran Shaikh", "worker3@survivaloop.demo", "FIELD_WORKER", 42),
-    makeUser("aud", "Demo Auditor", "auditor@survivaloop.demo", "AUDITOR", 0),
+    makeUser("demo-admin", "Demo Admin", "admin@survivaloop.demo", "ADMIN", 0),
+    makeUser("demo-supervisor", "Demo Supervisor", "supervisor@survivaloop.demo", "SUPERVISOR", 50),
+    makeUser("demo-worker", "Demo Field Worker", "worker@survivaloop.demo", "FIELD_WORKER", 120),
+    makeUser("u_w2", "Sunita Jadhav", "worker2@survivaloop.demo", "FIELD_WORKER", 86),
+    makeUser("u_w3", "Imran Shaikh", "worker3@survivaloop.demo", "FIELD_WORKER", 42),
+    makeUser("demo-auditor", "Demo Auditor", "auditor@survivaloop.demo", "AUDITOR", 0),
   ];
 
   // ---- interventions catalog ----
@@ -92,7 +91,7 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
   for (const i of interventions) repo.createIntervention({ ...i, org_id: ORG });
 
   // ---- workers ----
-  repo.createWorker({ id: "wk_w1", org_id: ORG, user_id: "u_w1", name: "Demo Field Worker", hours_per_day: 8, active: 1 });
+  repo.createWorker({ id: "wk_w1", org_id: ORG, user_id: "demo-worker", name: "Demo Field Worker", hours_per_day: 8, active: 1 });
   repo.createWorker({ id: "wk_w2", org_id: ORG, user_id: "u_w2", name: "Sunita Jadhav", hours_per_day: 8, active: 1 });
   repo.createWorker({ id: "wk_w3", org_id: ORG, user_id: "u_w3", name: "Imran Shaikh", hours_per_day: 8, active: 1 });
 
@@ -106,6 +105,8 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
   });
 
   // ---- geography ----
+  const humanNames = ["Nehru Nagar Cluster A", "Godavari Road Saplings", "College Road Tree Plot 3", "CIDCO Park Zone B", "Gangapur Road Young Trees", "Satpur MIDC Green Belt", "Panchavati Temple Trees", "Pathardi Phata Plot", "Indira Nagar Park"];
+  let clusterNameIdx = 0;
   const zoneIds: string[] = [];
   const clusterIds: string[] = [];
   const baseLat = 18.52, baseLng = 73.60; // Nashik-ish
@@ -120,7 +121,9 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
       clusterIds.push(cid);
       const lat = baseLat + (rng() - 0.5) * 0.02;
       const lng = baseLng + (rng() - 0.5) * 0.02;
-      repo.createCluster({ id: cid, org_id: ORG, zone_id: zid, code: `Z${z + 1}c${c + 1}`, name: `Cluster ${c + 1}`, lat, lng });
+      const cName = humanNames[clusterNameIdx % humanNames.length];
+      clusterNameIdx++;
+      repo.createCluster({ id: cid, org_id: ORG, zone_id: zid, code: `Z${z + 1}c${c + 1}`, name: cName, lat, lng });
       const treePer = opts.treePerCluster ?? 4;
       for (let tr = 0; tr < treePer; tr++) {
         const tid = `tr_${z}_${c}_${tr}`;
@@ -223,7 +226,7 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
         created_at: NOW_BASE - 3600_000, dispatched_at: NOW_BASE - 3000_000,
         accepted_at: state === "ACCEPTED" ? NOW_BASE - 2000_000 : null,
         sla_created_at: NOW_BASE - 3600_000, sla_deadline: NOW_BASE + 24 * 3600_000,
-        sla_state: "NORMAL", assigned_worker_ids_json: JSON.stringify(["u_w1"]), simulated: 1,
+        sla_state: "NORMAL", assigned_worker_ids_json: JSON.stringify(["demo-worker"]), simulated: 1,
       });
     };
     seedTask(tId(), "DISPATCHED", "int_water");

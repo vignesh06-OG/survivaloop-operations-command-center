@@ -206,5 +206,17 @@
   "common.quadrant": "Quadrant",
   "common.sector": "Sector",
   "map.fallbackWarning": "Satellite view requires a valid Mapbox API key. Defaulting to 3D map.",
-  "map.quadrant": "QUADRANT"
+  "map.quadrant": "QUADRANT",
+  "field.allTasksDone": "All tasks complete for today",
+  "field.youAreDone": "You're done",
+  "field.tasksToday": "tasks today",
+  "field.distanceAway": "{distance} away",
+  "field.getDirections": "Get Directions",
+  "field.wait": "Wait...",
+  "field.startTask": "START TASK",
+  "field.completeTask": "COMPLETE TASK",
+  "field.reportProblem": "Report a Problem",
+  "field.listening": "Listening...",
+  "field.voiceNote": "Add Voice Note",
+  "field.typeHere": "Type a note..."
 }

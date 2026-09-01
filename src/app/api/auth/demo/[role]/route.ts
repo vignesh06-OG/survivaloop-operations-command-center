@@ -44,13 +44,13 @@ export async function POST(
     // Use deterministic claims to avoid memory DB lookup during cold starts
     let user;
     if (role === "ADMIN") {
-      user = { id: "u_a1", name: "Demo Admin", role: "ADMIN", org_id: "org_demo", email: "admin@demo.local" };
+      user = { id: "demo-admin", name: "Demo Admin", role: "ADMIN", org_id: "org_demo", email: "admin@survivaloop.demo" };
     } else if (role === "SUPERVISOR") {
-      user = { id: "u_s1", name: "Demo Supervisor", role: "SUPERVISOR", org_id: "org_demo", email: "sup@demo.local" };
+      user = { id: "demo-supervisor", name: "Demo Supervisor", role: "SUPERVISOR", org_id: "org_demo", email: "supervisor@survivaloop.demo" };
     } else if (role === "FIELD_WORKER") {
-      user = { id: "u_w1", name: "Demo Field Worker", role: "FIELD_WORKER", org_id: "org_demo", email: "field@demo.local" };
+      user = { id: "demo-worker", name: "Demo Field Worker", role: "FIELD_WORKER", org_id: "org_demo", email: "worker@survivaloop.demo" };
     } else if (role === "AUDITOR") {
-      user = { id: "u_aud1", name: "Demo Auditor", role: "AUDITOR", org_id: "org_demo", email: "audit@demo.local" };
+      user = { id: "demo-auditor", name: "Demo Auditor", role: "AUDITOR", org_id: "org_demo", email: "auditor@survivaloop.demo" };
     } else {
       throw new HttpError(404, `No seeded user for role '${role}'.`);
     }

@@ -23,7 +23,31 @@ export async function GET(req: Request) {
     if (user.role === "FIELD_WORKER") {
       tasks = tasks.filter((t) => canAccessTask(user.role, JSON.parse(t.assigned_worker_ids_json as string), user.id));
     }
-    return NextResponse.json(tasks);
+    
+    // Augment with human-readable fields
+    const clusters = app.repo.listClusters(user.orgId);
+    const interventions = app.repo.listInterventions(user.orgId);
+    
+    const enrichedTasks = tasks.map(t => {
+      const cluster = clusters.find(c => c.id === t.entity_id);
+      const intv = interventions.find(i => i.id === t.intervention_class_id);
+      
+      let type = "OTHER";
+      if (intv?.code?.includes("WATER")) type = "WATER";
+      else if (intv?.code?.includes("INSPECT")) type = "INSPECT";
+      else if (intv?.code?.includes("STAKE") || intv?.code?.includes("REPAIR")) type = "REPAIR";
+
+      return {
+        ...t,
+        title: intv?.label || "Unknown Task",
+        entityName: cluster?.name || t.entity_id,
+        type,
+        coordinates: { lat: t.lat, lng: t.lng },
+        distanceMeters: null // To be computed on client if needed
+      };
+    });
+    
+    return NextResponse.json(enrichedTasks);
   } catch (e) {
     return handleError(e);
   }

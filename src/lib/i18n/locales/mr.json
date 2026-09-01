@@ -206,5 +206,17 @@
   "common.quadrant": "क्वाड्रंट",
   "common.sector": "सेक्टर",
   "map.fallbackWarning": "सॅटेलाइट व्ह्यूसाठी मॅपबॉक्स की आवश्यक आहे.",
-  "map.quadrant": "क्वाड्रंट"
+  "map.quadrant": "क्वाड्रंट",
+  "field.allTasksDone": "आजची सर्व कामे पूर्ण झाली",
+  "field.youAreDone": "तुमचे काम झाले",
+  "field.tasksToday": "आजची कामे",
+  "field.distanceAway": "{distance} दूर",
+  "field.getDirections": "मार्ग पहा",
+  "field.wait": "प्रतीक्षा करा...",
+  "field.startTask": "काम सुरू करा",
+  "field.completeTask": "काम पूर्ण करा",
+  "field.reportProblem": "समस्या नोंदवा",
+  "field.listening": "ऐकत आहे...",
+  "field.voiceNote": "व्हॉइस नोट जोडा",
+  "field.typeHere": "येथे टाईप करा..."
 }
