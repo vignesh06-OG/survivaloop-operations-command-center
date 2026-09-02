@@ -18,6 +18,7 @@ import { Logo } from "@/components/Logo";
 import StatsHeader from "./StatsHeader";
 import BottomNav from "./BottomNav";
 import ProfileModal from "./ProfileModal";
+import { Toast } from "./Toast";
 
 interface Me { id: string; name: string; email: string; role: string; orgId: string; dataMode: string; age?: number; city?: string; locality?: string; points: number }
 
@@ -35,6 +36,7 @@ export default function CommandCenter() {
   const hasMapboxToken = !!process.env.NEXT_PUBLIC_MAPBOX_TOKEN && !process.env.NEXT_PUBLIC_MAPBOX_TOKEN.includes("placeholder");
   const [use3D, setUse3D] = useState(!hasMapboxToken);
   const [mapError, setMapError] = useState(!hasMapboxToken);
+  const [toast, setToast] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -203,7 +205,7 @@ export default function CommandCenter() {
       const json = await res.json();
       await refresh();
       if (json.ok) {
-        alert(`Seeded: ${json.count || 0} queue tasks`);
+        setToast(`Seeded: ${json.count || 0} queue tasks`);
       } else {
         setError(json.error || "Failed to seed data.");
       }
@@ -337,6 +339,7 @@ export default function CommandCenter() {
       {overrideModal && selected && (
         <OverrideModal state={overrideModal} selected={selected} onClose={() => setOverrideModal(null)} onChanged={onChanged} />
       )}
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   );
 }

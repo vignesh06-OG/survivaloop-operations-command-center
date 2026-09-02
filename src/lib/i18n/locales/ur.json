@@ -206,5 +206,15 @@
   "common.quadrant": "کوآڈرنٹ",
   "common.sector": "سیکٹر",
   "map.fallbackWarning": "سیٹلائٹ منظر کے لیے Mapbox کی کلید درکار ہے۔",
-  "map.quadrant": "کوآڈرنٹ"
+  "map.quadrant": "کوآڈرنٹ",
+  "field.tasksToday": "آج کے کام",
+  "field.distanceAway": "{distance} دور",
+  "field.getDirections": "ہدایات حاصل کریں",
+  "field.startTask": "کام شروع کریں",
+  "field.completeTask": "کام مکمل کریں",
+  "field.reportProblem": "Report a Problem",
+  "field.voiceNote": "Add Voice Note",
+  "field.listening": "Listening...",
+  "field.typeHere": "Type a note...",
+  "field.wait": "Wait..."
 }
