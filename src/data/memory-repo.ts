@@ -3,6 +3,7 @@ import type { DbRow, Repo } from "./repo";
 import { buildSimulation } from "@/services/simulation";
 
 export class MemoryRepo implements Partial<Repo> {
+  tx<T>(fn: () => T): T { return fn(); }
   private tables: Record<string, DbRow[]> = {
     organisations: [],
     users: [],
@@ -217,7 +218,10 @@ export class MemoryRepo implements Partial<Repo> {
     const t = this.getTask(id);
     if (t) Object.assign(t, updates);
   }
-  getTask(id: string) { return this.tables.tasks.find(t => t.id === id) || null; }
+  getTask(id: string) { 
+    this.autoHydrate();
+    return this.tables.tasks.find(t => t.id === id) || null; 
+  }
   listTasks(orgId: string) { 
     this.autoHydrate();
     return this.tables.tasks.filter(t => t.org_id === orgId).sort((a, b) => new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime()); 
@@ -235,7 +239,58 @@ export class MemoryRepo implements Partial<Repo> {
       evidence: this.tables.evidence.length,
       decisions: this.tables.decisions.length,
       tasks: this.tables.tasks.length,
-      audit: 0
+      audit: this.tables.audit_logs?.length || 0
     };
   }
+
+  compareAndSetTaskState(id: string, expectedFrom: string, to: string, fields: DbRow = {}): boolean {
+    const task = this.getTask(id);
+    if (!task || task.state !== expectedFrom) return false;
+    task.state = to;
+    Object.assign(task, fields);
+    return true;
+  }
+  updateTaskFields(id: string, fields: Partial<DbRow>): void {
+    const task = this.getTask(id);
+    if (task) Object.assign(task, fields);
+  }
+  appendAudit(a: DbRow): void {
+    if (!this.tables.audit_logs) this.tables.audit_logs = [];
+    this.tables.audit_logs.push(a);
+  }
+  createSlaEvent(e: DbRow): void {
+    if (!this.tables.sla_events) this.tables.sla_events = [];
+    this.tables.sla_events.push(e);
+  }
+  createProof(p: DbRow): void {
+    if (!this.tables.execution_proofs) this.tables.execution_proofs = [];
+    this.tables.execution_proofs.push(p);
+  }
+  getProof(id: string): DbRow | null {
+    return (this.tables.execution_proofs || []).find(p => p.id === id) || null;
+  }
+  updateProof(id: string, updates: Partial<DbRow>): void {
+    const p = this.getProof(id);
+    if (p) Object.assign(p, updates);
+  }
+  findTaskByDecision(orgId: string, decisionId: string): DbRow | null {
+    return this.tables.tasks.find(t => t.org_id === orgId && t.decision_id === decisionId) || null;
+  }
+  markDecisionOverridden(id: string): void {
+    const d = this.getDecision(id);
+    if (d) d.overridden = 1;
+  }
+  createOverride(o: DbRow): void {
+    if (!this.tables.overrides) this.tables.overrides = [];
+    this.tables.overrides.push(o);
+  }
+  createVerificationReview(r: DbRow): void {
+    if (!this.tables.verification_reviews) this.tables.verification_reviews = [];
+    this.tables.verification_reviews.push(r);
+  }
+  createOutcome(o: DbRow): void {
+    if (!this.tables.outcomes) this.tables.outcomes = [];
+    this.tables.outcomes.push(o);
+  }
+  initBase(): void {}
 }
