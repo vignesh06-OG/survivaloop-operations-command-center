@@ -64,6 +64,10 @@ export function handleError(e: unknown): NextResponse {
   if (e instanceof HttpError) {
     return NextResponse.json({ error: e.message }, { status: e.status });
   }
+  // Check for domain PermissionDeniedError by name
+  if (e instanceof Error && e.name === "PermissionDeniedError") {
+    return NextResponse.json({ error: e.message }, { status: 403 });
+  }
   // Never leak internal details. Log server-side only.
   console.error("[survivaloop] error:", e);
   const msg = e instanceof Error ? e.message : "An unexpected error occurred.";

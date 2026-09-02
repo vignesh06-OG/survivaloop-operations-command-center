@@ -164,8 +164,8 @@ function FieldViewInner() {
                     if (!res.ok) throw new Error('Simulation failed');
                     await refresh();
                   } catch (err) {
-                    console.error('Failed to reload tasks:', err);
-                    alert('Failed to load demo tasks. Please try again.');
+                    console.error('Failed to load demo tasks:', err);
+                    setLeaderboard([{ id: 'err', name: 'Failed to load demo tasks. Please try again.', points: 0 }]);
                   } finally {
                     setLoading(false);
                   }
@@ -296,7 +296,7 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: FieldTaskView; onNex
 
   const toggleListen = () => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      alert("Voice dictation requires Google Chrome or a Chromium-based browser.");
+      setError("Voice dictation requires Google Chrome or a Chromium-based browser.");
       return;
     }
     

@@ -90,7 +90,7 @@ export default function AiBot() {
 
   const toggleListen = () => {
     if (typeof window === "undefined" || !('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      alert("Voice dictation requires Google Chrome or a Chromium-based browser.");
+      setMessages(prev => [...prev, { id: "err_voice_" + Date.now(), role: "system", content: "Voice dictation requires Google Chrome or a Chromium-based browser.", ts: Date.now() }]);
       return;
     }
     if (isListening) {

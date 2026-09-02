@@ -37,7 +37,7 @@ export class OpenAiProvider implements AiProvider {
         
         return {
           kind: "text",
-          content: greeting,
+          text: greeting,
         };
       }
     }
