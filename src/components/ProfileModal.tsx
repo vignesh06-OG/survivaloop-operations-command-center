@@ -31,19 +31,18 @@ export default function ProfileModal({ user, onComplete }: ProfileModalProps) {
     onComplete();
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     try {
-      await api("/api/profile", {
-        method: "POST",
-        body: { age, city, locality }
-      });
-      setShow(false);
-      onComplete();
+      // Demo Option A: store locally and skip API call to prevent blocking
+      localStorage.setItem("profileSkipped", "true");
+      localStorage.setItem("demoProfile", JSON.stringify({ age, city, locality }));
     } catch (err) {
       console.error(err);
     } finally {
+      setShow(false);
+      onComplete();
       setBusy(false);
     }
   };
@@ -53,6 +52,15 @@ export default function ProfileModal({ user, onComplete }: ProfileModalProps) {
       <div className="bg-[#0b0f14] border border-[#22c55e]/30 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#22c55e] to-emerald-900" />
         
+        <button 
+          onClick={handleSkip} 
+          className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors text-xl font-bold"
+          title="Close"
+          type="button"
+        >
+          &times;
+        </button>
+
         <h2 className="text-xl font-bold text-white mb-2 mt-2">Complete Profile</h2>
         <p className="text-sm text-[var(--muted)] mb-6">Earn points and track your rank on the leaderboard.</p>
 

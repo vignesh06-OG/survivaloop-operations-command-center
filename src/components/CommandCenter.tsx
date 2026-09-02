@@ -199,8 +199,14 @@ export default function CommandCenter() {
   const handleSeed = useCallback(async () => {
     try {
       setLoading(true);
-      await fetch('/api/simulate', { method: 'POST' });
+      const res = await fetch('/api/simulate', { method: 'POST' });
+      const json = await res.json();
       await refresh();
+      if (json.ok) {
+        alert(`Seeded: ${json.count || 0} queue tasks`);
+      } else {
+        setError(json.error || "Failed to seed data.");
+      }
     } catch (e) {
       console.error(e);
       setError("Failed to seed data.");

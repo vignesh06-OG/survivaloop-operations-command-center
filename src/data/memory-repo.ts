@@ -292,5 +292,27 @@ export class MemoryRepo implements Partial<Repo> {
     if (!this.tables.outcomes) this.tables.outcomes = [];
     this.tables.outcomes.push(o);
   }
+  listOutcomes(orgId: string): DbRow[] {
+    return (this.tables.outcomes || []).filter(o => o.org_id === orgId);
+  }
+  listOutcomesForEntity(orgId: string, level: string, id: string): DbRow[] {
+    return (this.tables.outcomes || []).filter(o => o.org_id === orgId && o.entity_level === level && o.entity_id === id);
+  }
+  getOutcome(id: string): DbRow | null {
+    return (this.tables.outcomes || []).find(o => o.id === id) || null;
+  }
+  listAudit(orgId: string): DbRow[] {
+    return (this.tables.audit_logs || []).filter(a => a.org_id === orgId);
+  }
+  listAuditForEntity(entityLevel: string, id: string): DbRow[] {
+    return (this.tables.audit_logs || []).filter(a => a.entity_level === entityLevel && a.entity_id === id);
+  }
+  listTasksAssignedTo(orgId: string, workerId: string): DbRow[] {
+    return this.tables.tasks.filter(t => t.org_id === orgId && (t.assigned_worker_ids_json as string || "").includes(workerId));
+  }
+  updateTaskState(id: string, state: string): void {
+    const t = this.getTask(id);
+    if (t) t.state = state;
+  }
   initBase(): void {}
 }
