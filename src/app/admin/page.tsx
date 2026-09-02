@@ -1,6 +1,5 @@
-"use client";
 import CommandCenter from "@/components/CommandCenter";
 
-export default function AdminPage() {
-  return <CommandCenter />;
+export default function Admin() {
+  return <CommandCenter viewMode="ADMIN" />;
 }

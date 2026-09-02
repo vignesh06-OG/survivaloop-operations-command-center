@@ -216,5 +216,11 @@
   "field.voiceNote": "Add Voice Note",
   "field.listening": "Listening...",
   "field.typeHere": "Type a note...",
-  "field.wait": "Wait..."
+  "field.wait": "Wait...",
+  "btn.cancel": "Cancel",
+  "btn.confirm": "Confirm",
+  "overrideDecision": "New Decision",
+  "overrideReason": "Reason",
+  "overrideReasonPlaceholder": "Enter reason...",
+  "err.reasonRequired": "Reason is required"
 }

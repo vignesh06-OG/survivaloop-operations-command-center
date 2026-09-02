@@ -273,6 +273,12 @@ export class MemoryRepo implements Partial<Repo> {
     const p = this.getProof(id);
     if (p) Object.assign(p, updates);
   }
+  findProofBySubmission(workerId: string, submissionId: string): DbRow | null {
+    return (this.tables.execution_proofs || []).find(p => p.worker_id === workerId && p.submission_id === submissionId) || null;
+  }
+  listProofsForTask(taskId: string): DbRow[] {
+    return (this.tables.execution_proofs || []).filter(p => p.task_id === taskId).sort((a, b) => new Date(a.submitted_at as string).getTime() - new Date(b.submitted_at as string).getTime());
+  }
   findTaskByDecision(orgId: string, decisionId: string): DbRow | null {
     return this.tables.tasks.find(t => t.org_id === orgId && t.decision_id === decisionId) || null;
   }

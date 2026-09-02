@@ -218,5 +218,11 @@
   "field.reportProblem": "समस्या दर्ज करें",
   "field.listening": "सुन रहा हूँ...",
   "field.voiceNote": "वॉइस नोट जोड़ें",
-  "field.typeHere": "यहाँ टाइप करें..."
+  "field.typeHere": "यहाँ टाइप करें...",
+  "btn.cancel": "रद्द करें",
+  "btn.confirm": "पुष्टि करें",
+  "overrideDecision": "नया निर्णय",
+  "overrideReason": "कारण",
+  "overrideReasonPlaceholder": "कारण दर्ज करें...",
+  "err.reasonRequired": "कारण आवश्यक है"
 }

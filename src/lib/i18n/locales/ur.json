@@ -22,7 +22,7 @@
   "kpi.openTasks": "کھلے کام",
   "kpi.verified": "تصدیق شدہ",
   "selectCase": "کوئی کیس منتخب کریں",
-  "btn.override": "اوور رائیڈ",
+  "btn.override": "اوور رائڈ",
   "btn.act": "عمل کریں",
   "btn.rerun": "⟳",
   "emptyState.select": "ثبوت، استدلال، صلاحیت، SLA، کاموں اور تصدیق کا معائنہ کرنے کے لیے نقشے یا قطار سے کسی ہستی کا انتخاب کریں۔",
@@ -216,5 +216,11 @@
   "field.voiceNote": "Add Voice Note",
   "field.listening": "Listening...",
   "field.typeHere": "Type a note...",
-  "field.wait": "Wait..."
+  "field.wait": "Wait...",
+  "btn.cancel": "منسوخ کریں",
+  "btn.confirm": "تصدیق کریں",
+  "overrideDecision": "نیا فیصلہ",
+  "overrideReason": "وجہ",
+  "overrideReasonPlaceholder": "وجہ درج کریں...",
+  "err.reasonRequired": "وجہ درکار ہے"
 }

@@ -23,6 +23,25 @@ export class OpenAiProvider implements AiProvider {
     if (!this.client) {
       throw new Error("OpenAI client not initialized (missing API key)");
     }
+
+    // LAYER 1: Deterministic routing for greetings
+    const lastUserMsg = [...history].reverse().find(m => m.role === "user");
+    if (lastUserMsg && !lastUserMsg.image) {
+      const text = lastUserMsg.content.toLowerCase().trim();
+      const greetings = ["hi", "hello", "hey", "help"];
+      if (greetings.includes(text)) {
+        let greeting = "Hello! I am your AI Field Assistant. I can help you summarize tasks, draft reports, or understand the platform. How can I assist you today?";
+        if (locale.startsWith("hi")) greeting = "नमस्ते! मैं आपका एआई फील्ड असिस्टेंट हूं। मैं आपके कार्यों को सारांशित करने, रिपोर्ट तैयार करने या प्लेटफ़ॉर्म को समझने में आपकी मदद कर सकता हूं। मैं आपकी कैसे मदद कर सकता हूं?";
+        if (locale.startsWith("mr")) greeting = "नमस्कार! मी तुमचा एआय फील्ड असिस्टंट आहे. मी तुम्हाला तुमची कामे समजून घेण्यासाठी किंवा अहवाल तयार करण्यासाठी मदत करू शकतो.";
+        if (locale.startsWith("ur")) greeting = "ہیلو! میں آپ کا اے آئی فیلڈ اسسٹنٹ ہوں۔ میں آپ کی کیسے مدد کر سکتا ہوں؟";
+        
+        return {
+          kind: "text",
+          content: greeting,
+        };
+      }
+    }
+
     const systemPrompt = this.buildSystemPrompt(context, locale);
 
     // Map history to OpenAI format.
@@ -84,14 +103,23 @@ export class OpenAiProvider implements AiProvider {
 
   private buildSystemPrompt(context: TaskContext | null, locale: string): string {
     let prompt = `You are an AI Field Assistant for the SurvivaLoop Operations platform.
-You act as an advisor and helper for field workers, including those who are not tech-savvy.
+You act as an advisor and helper for field workers and supervisors, including those who are not tech-savvy.
 
 ## Global Rules
 1. Respond exclusively in the requested language locale: ${locale}.
 2. If the user asks for general navigation (e.g., "Where are my tasks?"), return kind="intent" with intent="NAVIGATION".
 3. If the user wants to register a complaint (e.g., water issue, tree dying), return kind="intent" with intent="COMPLAINT". Extract any relevant info.
 4. If the user uploads an image of a tree and asks for analysis, return kind="tree_health" with a detailed analysis.
-5. For all other general inquiries, return kind="intent" with intent="GENERAL" or kind="text" for simple text.`;
+5. If the user asks how to use the app, use the App Help Knowledge below to answer accurately. Return kind="text".
+6. For all other general inquiries, return kind="intent" with intent="GENERAL" or kind="text" for simple text.
+
+## App Help Knowledge (Platform Features)
+- Dashboard/Map: The Command Center (for Supervisors and Admins) displays a 2D/3D map of all clusters and interventions.
+- Priority Queue: Shows incoming AI decisions that need human verification or override.
+- Seed Button: Generates simulated tasks and evidence for demo purposes.
+- Override: Supervisors can override AI decisions (e.g., change ACT to DEFER).
+- Field Worker Tasks: Field workers see a list of assigned tasks, where they must travel to the location, capture photo evidence, and submit proof.
+- Roles: ADMIN (full access, config), SUPERVISOR (dashboard, act, dispatch, review proofs), FIELD WORKER (mobile app, tasks, proofs), AUDITOR (read-only compliance dashboard).`;
 
     if (context) {
       prompt += `\n

@@ -218,5 +218,11 @@
   "field.reportProblem": "Report a Problem",
   "field.listening": "Listening...",
   "field.voiceNote": "Add Voice Note",
-  "field.typeHere": "Type a note..."
+  "field.typeHere": "Type a note...",
+  "btn.cancel": "Cancel",
+  "btn.confirm": "Confirm",
+  "overrideDecision": "New Decision",
+  "overrideReason": "Reason",
+  "overrideReasonPlaceholder": "Enter reason...",
+  "err.reasonRequired": "Reason is required"
 }

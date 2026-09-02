@@ -22,7 +22,7 @@ import { Toast } from "./Toast";
 
 interface Me { id: string; name: string; email: string; role: string; orgId: string; dataMode: string; age?: number; city?: string; locality?: string; points: number }
 
-export default function CommandCenter() {
+export default function CommandCenter({ viewMode }: { viewMode?: "SUPERVISOR" | "AUDITOR" | "ADMIN" }) {
   const { t, lang } = useTranslation();
   const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
@@ -224,7 +224,7 @@ export default function CommandCenter() {
   return (
     <div className="min-h-screen flex flex-col p-3">
       <ProfileModal user={me} onComplete={refresh} />
-      <Header me={me} onLogout={async () => { await api("/api/auth/logout", { method: "POST" }); setMe(null); }} onRunSim={handleSeed} />
+      <Header me={me} viewMode={viewMode || "SUPERVISOR"} onLogout={async () => { await api("/api/auth/logout", { method: "POST" }); setMe(null); }} onRunSim={handleSeed} />
       <StatsHeader oversight={oversight} />
 
       <div className="flex-1 min-h-0 mt-3">
@@ -281,7 +281,7 @@ export default function CommandCenter() {
                     <h2 className="text-sm font-bold truncate">{selectedCluster?.code ?? selected ?? t("selectCase")}</h2>
                     <div className="text-[11px] text-[var(--muted)] truncate">{selectedCluster?.name ?? (t("common.cluster") || "cluster")} {selected ? `· ${selected}` : ""}</div>
                   </div>
-                  {selected && (
+                  {selected && viewMode !== "AUDITOR" && (
                     <div className="flex gap-1.5 shrink-0">
                       <button className="btn text-[11px] px-2" title={t("btn.rerun")} onClick={async () => {
                         setError(null);
@@ -337,14 +337,14 @@ export default function CommandCenter() {
         {t("footer.demo", { dataMode: me.dataMode === "SIMULATED" ? t("footer.simulatedMode") : t("footer.liveMode") })}
       </footer>
       {overrideModal && selected && (
-        <OverrideModal state={overrideModal} selected={selected} onClose={() => setOverrideModal(null)} onChanged={onChanged} />
+        <OverrideModal state={overrideModal} selected={selected} onClose={() => setOverrideModal(null)} onChanged={onChanged} setToast={setToast} />
       )}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   );
 }
 
-function Header({ me, onLogout, onRunSim }: { me: Me; onLogout: () => void; onRunSim: () => void }) {
+function Header({ me, viewMode, onLogout, onRunSim }: { me: Me; viewMode: string; onLogout: () => void; onRunSim: () => void }) {
   const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
   return (
@@ -355,6 +355,8 @@ function Header({ me, onLogout, onRunSim }: { me: Me; onLogout: () => void; onRu
           <div className="text-[11px] text-[var(--muted)] font-medium tracking-wide uppercase mt-1">{t("nav.commandCenter")}</div>
         </div>
         <span className="pill ms-2 bg-amber-900/40 text-amber-200">{t("nav.simulatedData")}</span>
+        {viewMode === "AUDITOR" && <span className="pill ms-2 bg-purple-900/40 text-purple-200 border-purple-500/30">READ-ONLY AUDITOR MODE</span>}
+        {viewMode === "ADMIN" && <span className="pill ms-2 bg-blue-900/40 text-blue-200 border-blue-500/30">SYSTEM ADMIN</span>}
       </div>
       <div className="flex items-center gap-3">
         <LanguageSelector />
@@ -363,7 +365,7 @@ function Header({ me, onLogout, onRunSim }: { me: Me; onLogout: () => void; onRu
         <button className="btn text-[12px] px-2" onClick={toggleTheme} title="Toggle Theme">
           {theme === "dark" ? "🌞" : "🌙"}
         </button>
-        <button className="btn text-[12px]" onClick={onRunSim}>{t("nav.seed")}</button>
+        {(viewMode === "ADMIN" || viewMode === "SUPERVISOR") && <button className="btn text-[12px]" onClick={onRunSim}>{t("nav.seed")}</button>}
         <button className="btn text-[12px]" onClick={onLogout}>{t("nav.logout")}</button>
       </div>
     </header>
@@ -395,7 +397,7 @@ function rowToEvidence(r: any): EvidenceView {
 }
 
 /** In-app override modal (replaces window.prompt). */
-function OverrideModal({ state, selected, onClose, onChanged }: { state: { decisionId: string; decision: string; reason: string }; selected: string; onClose: () => void; onChanged: () => Promise<void> }) {
+function OverrideModal({ state, selected, onClose, onChanged, setToast }: { state: { decisionId: string; decision: string; reason: string }; selected: string; onClose: () => void; onChanged: () => Promise<void>; setToast: (msg: string) => void }) {
   const { t } = useTranslation();
   const [decision, setDecision] = useState(state.decision);
   const [reason, setReason] = useState(state.reason);
@@ -408,6 +410,7 @@ function OverrideModal({ state, selected, onClose, onChanged }: { state: { decis
     setErr(null);
     try {
       await api("/api/override", { method: "POST", body: { entity: { level: "MICRO_CLUSTER", id: selected }, decisionId: state.decisionId, humanDecision: decision.toUpperCase(), reason } });
+      setToast(t("override.success") || "Decision overridden successfully");
       await onChanged();
       onClose();
     } catch (e) {
@@ -418,19 +421,19 @@ function OverrideModal({ state, selected, onClose, onChanged }: { state: { decis
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)" }} onClick={onClose}>
-      <div className="panel p-6 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center animate-fade-in" style={{ background: "rgba(0,0,0,0.6)" }} onClick={onClose}>
+      <div className="panel p-6 w-full max-w-sm mx-4 animate-slide-up" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-sm font-bold mb-4">{t("btn.override")}</h3>
         <label className="text-xs text-[var(--muted)] block mb-1">{t("overrideDecision") || "New Decision"}</label>
-        <select className="w-full p-2 rounded text-sm mb-3" style={{ background: "var(--bg2)", border: "1px solid var(--border)", color: "var(--fg)" }} value={decision} onChange={(e) => setDecision(e.target.value)}>
+        <select className="w-full p-2 rounded text-sm mb-3 focus:border-[#22c55e] outline-none transition-colors" style={{ background: "var(--bg2)", border: "1px solid var(--border)", color: "var(--fg)" }} value={decision} onChange={(e) => setDecision(e.target.value)}>
           {["ACT", "DEFER", "MONITOR", "ESCALATE"].map((d) => <option key={d} value={d}>{d}</option>)}
         </select>
         <label className="text-xs text-[var(--muted)] block mb-1">{t("overrideReason") || "Reason"}</label>
-        <textarea className="w-full p-2 rounded text-sm mb-3" style={{ background: "var(--bg2)", border: "1px solid var(--border)", color: "var(--fg)", minHeight: 60 }} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("overrideReasonPlaceholder") || "Enter the reason for this override..."} />
-        {err && <div className="text-xs mb-2" style={{ color: "#f87171" }}>⚠ {err}</div>}
-        <div className="flex gap-2 justify-end">
-          <button className="btn text-xs px-3" onClick={onClose} disabled={busy}>{t("btn.cancel") || "Cancel"}</button>
-          <button className="btn btn-primary text-xs px-3" onClick={submit} disabled={busy || !reason.trim()}>{busy ? "..." : t("btn.confirm") || "Confirm Override"}</button>
+        <textarea className="w-full p-2 rounded text-sm mb-3 focus:border-[#22c55e] outline-none transition-colors" style={{ background: "var(--bg2)", border: "1px solid var(--border)", color: "var(--fg)", minHeight: 60 }} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("overrideReasonPlaceholder") || "Enter the reason for this override..."} />
+        {err && <div className="text-xs mb-2 text-red-400">⚠ {err}</div>}
+        <div className="flex gap-2 justify-end mt-2">
+          <button className="btn text-xs px-3 hover:bg-[var(--bg2)] transition-colors" onClick={onClose} disabled={busy}>{t("btn.cancel") || "Cancel"}</button>
+          <button className="btn btn-primary text-xs px-3 hover:bg-[#16a34a] transition-colors" onClick={submit} disabled={busy || !reason.trim()}>{busy ? "..." : t("btn.confirm") || "Confirm Override"}</button>
         </div>
       </div>
     </div>

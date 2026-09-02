@@ -1,6 +1,5 @@
-"use client";
 import CommandCenter from "@/components/CommandCenter";
 
-export default function AuditPage() {
-  return <CommandCenter />;
+export default function Audit() {
+  return <CommandCenter viewMode="AUDITOR" />;
 }
