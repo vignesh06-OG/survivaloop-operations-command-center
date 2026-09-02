@@ -1,5 +1,6 @@
 import { newId } from "@/domain/audit";
 import type { DbRow, Repo } from "./repo";
+import { buildSimulation } from "@/services/simulation";
 
 export class MemoryRepo implements Partial<Repo> {
   private tables: Record<string, DbRow[]> = {
@@ -17,6 +18,27 @@ export class MemoryRepo implements Partial<Repo> {
     workers: [],
     capacity: []
   };
+
+  private _hydrating = false;
+  private autoHydrate() {
+    if (this._hydrating) return;
+    if (this.tables.trees.length === 0 || this.tables.tasks.length === 0) {
+      this._hydrating = true;
+      try {
+        buildSimulation(this as any, {
+          scenarios: [
+            "fresh_severe_act", "conflicting_evidence", "healthy_monitor",
+            "capacity_shortage_defer", "water_shortage", "task_expiry",
+            "sudden_distress", "false_report", "stale_evidence",
+            "worker_absence", "duplicate_evidence",
+          ],
+          seedDemoTasks: true,
+        });
+      } finally {
+        this._hydrating = false;
+      }
+    }
+  }
 
   private insert(table: string, row: DbRow) {
     this.tables[table].push(row);
@@ -50,9 +72,11 @@ export class MemoryRepo implements Partial<Repo> {
   createTree(t: DbRow) { this.insert("trees", t); }
   listZones(orgId: string) { return this.tables.zones.filter(z => z.org_id === orgId); }
   listClusters(orgId: string, zoneId?: string) {
+    this.autoHydrate();
     return this.tables.clusters.filter(c => c.org_id === orgId && (!zoneId || c.zone_id === zoneId));
   }
   listTrees(orgId: string, clusterId?: string) {
+    this.autoHydrate();
     return this.tables.trees.filter(t => t.org_id === orgId && (!clusterId || t.cluster_id === clusterId));
   }
   getEntityLocation(level: string, id: string) {
@@ -193,7 +217,10 @@ export class MemoryRepo implements Partial<Repo> {
     if (t) Object.assign(t, updates);
   }
   getTask(id: string) { return this.tables.tasks.find(t => t.id === id) || null; }
-  listTasks(orgId: string) { return this.tables.tasks.filter(t => t.org_id === orgId).sort((a, b) => new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime()); }
+  listTasks(orgId: string) { 
+    this.autoHydrate();
+    return this.tables.tasks.filter(t => t.org_id === orgId).sort((a, b) => new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime()); 
+  }
   tasksByState(orgId: string, state: string) { return this.tables.tasks.filter(t => t.org_id === orgId && t.state === state).sort((a, b) => new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime()); }
   tasksByEntity(orgId: string, level: string, entityId: string) {
     return this.tables.tasks.filter(t => t.org_id === orgId && t.entity_level === level && t.entity_id === entityId).sort((a, b) => new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime());

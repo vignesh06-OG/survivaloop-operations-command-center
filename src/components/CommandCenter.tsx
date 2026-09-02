@@ -53,23 +53,34 @@ export default function CommandCenter() {
         throw err;
       }
       
-      if (!m || !m.user) { setMe(null); setLoading(false); return; }
+      if (!m || !m.user) { 
+        setMe(null); 
+        setLoading(false); 
+        return; 
+      }
       if (m.user.role === "FIELD_WORKER" && window.location.pathname !== "/field") { window.location.assign("/field"); return; }
       if (m.user.role === "ADMIN" && window.location.pathname !== "/admin") { window.location.assign("/admin"); return; }
       if (m.user.role === "AUDITOR" && window.location.pathname !== "/audit") { window.location.assign("/audit"); return; }
       if (m.user.role === "SUPERVISOR" && window.location.pathname !== "/") { window.location.assign("/"); return; }
       
       setMe(m.user);
-      const [o, ent, zs] = await Promise.all([
-        api<any>("/api/oversight"),
-        api<{ clusters: any[] }>("/api/entities?scope=clusters"),
-        api<{ zones: any[] }>("/api/entities?scope=zones"),
-      ]);
-      setOversight(o);
-      setClusters(ent.clusters ?? []);
-      setZones(zs.zones ?? []);
+      
+      try {
+        const [o, ent, zs] = await Promise.all([
+          api<any>("/api/oversight"),
+          api<{ clusters: any[] }>("/api/entities?scope=clusters"),
+          api<{ zones: any[] }>("/api/entities?scope=zones"),
+        ]);
+        setOversight(o);
+        setClusters(ent.clusters ?? []);
+        setZones(zs.zones ?? []);
+        setError(null);
+      } catch (dataErr) {
+        console.error("Data refresh failed:", dataErr);
+        setError("Failed to load dashboard data. Retrying...");
+      }
     } catch (e) {
-      console.error("Refresh failed:", e);
+      console.error("Auth check failed:", e);
       setMe(null);
     } finally {
       setLoading(false);
@@ -260,7 +271,7 @@ export default function CommandCenter() {
                         try {
                           const d = await api<any>("/api/decision", { method: "POST", body: { level: "MICRO_CLUSTER", id: selected } });
                           if (d.decision === "ACT") {
-                            await api("/api/tasks", { method: "POST", body: { mode: "COMMIT", level: "MICRO_CLUSTER", entityId: selected, decisionId: d.decisionId, interventionId: d.interventionId, workerIds: ["u_w1", "u_w2"] } });
+                            await api("/api/tasks", { method: "POST", body: { mode: "COMMIT", level: "MICRO_CLUSTER", entityId: selected, decisionId: d.decisionId, interventionId: d.interventionId, workerIds: ["demo-worker", "u_w2"] } });
                           }
                           await onChanged();
                         } catch (e) { setError((e as Error).message); }

@@ -11,7 +11,7 @@ import ProfileModal from "./ProfileModal";
 
 interface Me { id: string; name: string; email: string; role: string; orgId: string; dataMode: string; points: number; city?: string; locality?: string; age?: number }
 
-export default function FieldView() {
+function FieldViewInner() {
   const { t, lang, speechCode } = useTranslation();
   const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,31 +28,34 @@ export default function FieldView() {
       try {
         res = await fetch("/api/auth/me", { signal: abortController.signal });
         clearTimeout(timeoutId);
+        if (res.status === 401) {
+          setMe(null);
+          setLoading(false);
+          return;
+        }
+        if (!res.ok) throw new Error("Auth endpoint returned " + res.status);
       } catch (err) {
         clearTimeout(timeoutId);
-        setMe(null);
+        // Only clear session if it's explicitly unauthorized. Network errors shouldn't auto-logout.
         setLoading(false);
         return;
       }
-      if (!res.ok) {
-        setMe(null);
-        setLoading(false);
-        return;
-      }
+
       const m = await res.json();
       if (!m.user) { setMe(null); setLoading(false); return; }
       if (m.user.role !== "FIELD_WORKER") { window.location.assign("/"); return; }
       setMe(m.user);
       
-      const ts = await api<TaskView[]>("/api/tasks");
-      // Filter out finished tasks from the queue for simplicity
-      const activeTasks = ts.filter(t => !["PROOF_SUBMITTED", "VERIFIED", "REJECTED", "EXPIRED", "CANCELLED"].includes(t.state));
-      // Sort by creation time (or SLA)
-      setTasks(activeTasks.sort((a, b) => b.created_at - a.created_at));
+      try {
+        const ts = await api<TaskView[]>("/api/tasks");
+        const activeTasks = ts.filter(t => !["PROOF_SUBMITTED", "VERIFIED", "REJECTED", "EXPIRED", "CANCELLED"].includes(t.state));
+        setTasks(activeTasks.sort((a, b) => b.created_at - a.created_at));
 
-      // Fetch leaderboard
-      const lb = await api<any[]>("/api/leaderboard?scope=overall").catch(() => []);
-      setLeaderboard(lb);
+        const lb = await api<any[]>("/api/leaderboard?scope=overall").catch(() => []);
+        setLeaderboard(lb);
+      } catch (e) {
+        console.error("Failed to load tasks/leaderboard:", e);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -156,8 +159,16 @@ export default function FieldView() {
               <button 
                 onClick={async () => {
                   setLoading(true);
-                  await api("/api/simulate", { method: "POST" });
-                  await refresh();
+                  try {
+                    const res = await fetch('/api/simulate', { method: 'POST' });
+                    if (!res.ok) throw new Error('Simulation failed');
+                    await refresh();
+                  } catch (err) {
+                    console.error('Failed to reload tasks:', err);
+                    alert('Failed to load demo tasks. Please try again.');
+                  } finally {
+                    setLoading(false);
+                  }
                 }}
                 className="mt-4 px-6 py-3 bg-[#34d399] text-black font-bold rounded-xl"
               >
@@ -440,3 +451,40 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: FieldTaskView; onNex
     </div>
   );
 }
+
+import React from "react";
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: any }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("FieldView Error Boundary Caught:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-black grid place-items-center text-white p-6 text-center">
+          <div>
+            <h1 className="text-xl font-bold text-red-500 mb-2">Something went wrong</h1>
+            <p className="text-sm text-gray-400 mb-4">{this.state.error?.message}</p>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-[#34d399] text-black font-bold rounded">Reload Page</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function FieldView() {
+  return (
+    <ErrorBoundary>
+      <FieldViewInner />
+    </ErrorBoundary>
+  );
+}
+
