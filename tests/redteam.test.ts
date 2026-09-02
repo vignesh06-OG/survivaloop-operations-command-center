@@ -87,8 +87,8 @@ test("RED-3b: a transition racing from a stale base throws ConcurrentTransitionE
   app.dispatch(sup, t.id as string, ["u_w1"]);
   // Now simulate a SECOND actor that read the OLD state and tries to dispatch again.
   const worker = { id: "u_w1", orgId: "org", email: "w@x", name: "W", role: "FIELD_WORKER" as const, dataMode: "SIMULATED" as const };
-  // IN_PROGRESS is only valid from ACCEPTED; from DISPATCHED it is illegal.
-  assert.throws(() => app.tasks.transition(t.id as string, "IN_PROGRESS", worker), /Invalid transition/);
+  // COMPLETED is only valid from IN_PROGRESS; from DISPATCHED it is illegal.
+  assert.throws(() => app.tasks.transition(t.id as string, "COMPLETED", worker), /Invalid transition/);
 });
 
 /* 4. PASSWORD — real scrypt, and length-safe compare. */

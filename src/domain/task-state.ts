@@ -11,7 +11,7 @@ import type { Role, TaskState } from "./types";
 export const TASK_TRANSITIONS: Record<TaskState, readonly TaskState[]> = {
   PROPOSED: ["COMMITTED", "CANCELLED"],
   COMMITTED: ["DISPATCHED", "CANCELLED", "ESCALATED"],
-  DISPATCHED: ["ACCEPTED", "CANCELLED", "ESCALATED"],
+  DISPATCHED: ["ACCEPTED", "CANCELLED", "ESCALATED", "IN_PROGRESS"],
   ACCEPTED: ["IN_PROGRESS", "ESCALATED", "CANCELLED"],
   IN_PROGRESS: ["COMPLETED", "ESCALATED"],
   COMPLETED: ["PROOF_SUBMITTED", "REASSESS_REQUIRED"],
@@ -69,6 +69,7 @@ export const TRANSITION_AUTHORS: Partial<
   ],
   DISPATCHED: [
     { to: "ACCEPTED", roles: ["FIELD_WORKER"] },
+    { to: "IN_PROGRESS", roles: ["FIELD_WORKER"] },
     { to: "CANCELLED", roles: ["SUPERVISOR"] },
   ],
   ACCEPTED: [{ to: "IN_PROGRESS", roles: ["FIELD_WORKER"] }],

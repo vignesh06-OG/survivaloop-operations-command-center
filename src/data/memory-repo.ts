@@ -203,6 +203,7 @@ export class MemoryRepo implements Partial<Repo> {
   }
   getDecision(id: string) { return this.tables.decisions.find(d => d.id === id) || null; }
   listLatestDecisions(orgId: string) {
+    this.autoHydrate();
     const map = new Map<string, DbRow>();
     const decs = this.tables.decisions.filter(d => d.org_id === orgId).sort((a, b) => new Date(a.at as string).getTime() - new Date(b.at as string).getTime());
     for (const d of decs) {
@@ -228,6 +229,7 @@ export class MemoryRepo implements Partial<Repo> {
   getTaskForEvidence(evidenceId: string) { return this.tables.tasks.find(t => t.proof_evidence_id === evidenceId) || null; }
   
   info() {
+    this.autoHydrate();
     return {
       users: this.tables.users.length,
       evidence: this.tables.evidence.length,

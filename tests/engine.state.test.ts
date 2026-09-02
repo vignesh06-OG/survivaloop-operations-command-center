@@ -36,3 +36,7 @@ test("no transition table entry points back into a terminal state", () => {
     }
   }
 });
+
+test('field worker can skip ACCEPTED in demo mode', () => {
+  assert.ok(canTransition('DISPATCHED', 'IN_PROGRESS'));
+});

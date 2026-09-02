@@ -196,6 +196,19 @@ export default function CommandCenter() {
     };
   }, [detail]);
 
+  const handleSeed = useCallback(async () => {
+    try {
+      setLoading(true);
+      await fetch('/api/simulate', { method: 'POST' });
+      await refresh();
+    } catch (e) {
+      console.error(e);
+      setError("Failed to seed data.");
+    } finally {
+      setLoading(false);
+    }
+  }, [refresh]);
+
   if (loading) return <div className="min-h-screen grid place-items-center text-[var(--muted)]">Loading…</div>;
   if (!me) return <Login onAuthed={refresh} />;
 
@@ -203,7 +216,7 @@ export default function CommandCenter() {
   return (
     <div className="min-h-screen flex flex-col p-3">
       <ProfileModal user={me} onComplete={refresh} />
-      <Header me={me} onLogout={async () => { await api("/api/auth/logout", { method: "POST" }); setMe(null); }} onRunSim={refresh} />
+      <Header me={me} onLogout={async () => { await api("/api/auth/logout", { method: "POST" }); setMe(null); }} onRunSim={handleSeed} />
       <StatsHeader oversight={oversight} />
 
       <div className="flex-1 min-h-0 mt-3">
@@ -248,7 +261,12 @@ export default function CommandCenter() {
           {/* ---- RIGHT 20% : audit log + detail ---- */}
           <div className="rail flex flex-col min-h-0 order-3">
             <div className="rail-scroll space-y-3 flex-1">
-              {error && <div className="text-red-300 text-sm">{error}</div>}
+              {error && (
+                <div className="flex items-center justify-between bg-red-900/50 p-3 rounded-lg border border-red-500/50 shadow-lg">
+                  <div className="text-red-300 text-sm font-medium">{error}</div>
+                  <button onClick={refresh} className="text-xs font-bold bg-red-800 hover:bg-red-700 text-white px-3 py-1.5 rounded transition-colors">Retry</button>
+                </div>
+              )}
               <div className="panel p-3">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0">

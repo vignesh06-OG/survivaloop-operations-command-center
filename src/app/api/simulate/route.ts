@@ -29,9 +29,9 @@ export async function POST() {
               entity: { level: "MICRO_CLUSTER", id: c.id as string },
               interventionId: intervention.id as string,
               decisionId: r.decisionId,
-              workerIds: ["u_w1", "u_w2"],
+              workerIds: ["demo-worker"],
             });
-            app.dispatch(user, app.repo.listTasks(user.orgId).find((t) => t.entity_id === c.id)!.id as string, ["u_w1", "u_w2"]);
+            app.dispatch(user, app.repo.listTasks(user.orgId).find((t) => t.entity_id === c.id)!.id as string, ["demo-worker"]);
           } catch (e) { /* capacity may be exhausted; defer is fine */ }
         }
       }
