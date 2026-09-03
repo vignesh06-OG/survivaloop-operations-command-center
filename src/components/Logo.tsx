@@ -9,18 +9,19 @@ export function Logo({ variant = "header", className, ...props }: LogoProps) {
   const isLogin = variant === "login";
 
   // Dimensions based on variant
-  const width = isIcon ? 32 : isLogin ? 220 : 180;
+  const width = isIcon ? 32 : isLogin ? 240 : 240;
   const height = isIcon ? 32 : isLogin ? 70 : 40;
-  const viewBox = isIcon ? "0 0 32 32" : "0 0 180 40";
+  const viewBox = isIcon ? "0 0 32 32" : "0 0 240 40";
 
   return (
-    <div className={`inline-flex flex-col items-center justify-center ${className || ""}`}>
+    <div className={`inline-flex flex-col items-center justify-center shrink-0 ${className || ""}`}>
       <svg
         width={width}
         height={height}
         viewBox={viewBox}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        className="overflow-visible"
         {...props}
       >
         {/* Icon: Stylized Tree Canopy + Looped Trunk Arrow */}
@@ -58,7 +59,7 @@ export function Logo({ variant = "header", className, ...props }: LogoProps) {
             fontSize="22"
             letterSpacing="-0.5"
           >
-            <tspan fill="currentColor" className="text-zinc-900 dark:text-white">Surviva</tspan>
+            <tspan fill="currentColor" className="text-[var(--foreground)]">Surviva</tspan>
             <tspan fill="#10b981">Loop</tspan>
           </text>
         )}
