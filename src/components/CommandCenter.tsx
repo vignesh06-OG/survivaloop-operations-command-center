@@ -425,14 +425,14 @@ function OverrideModal({ state, selected, onClose, onChanged, setToast }: { stat
       <div className="panel p-6 w-full max-w-sm mx-4 animate-slide-up" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-sm font-bold mb-4">{t("btn.override")}</h3>
         <label className="text-xs text-[var(--muted)] block mb-1">{t("overrideDecision") || "New Decision"}</label>
-        <select className="w-full p-2 rounded text-sm mb-3 focus:border-[#22c55e] outline-none transition-colors" style={{ background: "var(--bg2)", border: "1px solid var(--border)", color: "var(--fg)" }} value={decision} onChange={(e) => setDecision(e.target.value)}>
-          {["ACT", "DEFER", "MONITOR", "ESCALATE"].map((d) => <option key={d} value={d}>{d}</option>)}
+        <select className="input mb-3" value={decision} onChange={(e) => setDecision(e.target.value)}>
+          {["ACT", "DEFER", "MONITOR", "ESCALATE"].map((d) => <option key={d} value={d} className="bg-[var(--panel)] text-[var(--text)]">{d}</option>)}
         </select>
         <label className="text-xs text-[var(--muted)] block mb-1">{t("overrideReason") || "Reason"}</label>
-        <textarea className="w-full p-2 rounded text-sm mb-3 focus:border-[#22c55e] outline-none transition-colors" style={{ background: "var(--bg2)", border: "1px solid var(--border)", color: "var(--fg)", minHeight: 60 }} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("overrideReasonPlaceholder") || "Enter the reason for this override..."} />
+        <textarea className="input mb-3" style={{ minHeight: 60 }} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("overrideReasonPlaceholder") || "Enter the reason for this override..."} />
         {err && <div className="text-xs mb-2 text-red-400">⚠ {err}</div>}
         <div className="flex gap-2 justify-end mt-2">
-          <button className="btn text-xs px-3 hover:bg-[var(--bg2)] transition-colors" onClick={onClose} disabled={busy}>{t("btn.cancel") || "Cancel"}</button>
+          <button className="btn text-xs px-3" onClick={onClose} disabled={busy}>{t("btn.cancel") || "Cancel"}</button>
           <button className="btn btn-primary text-xs px-3 hover:bg-[#16a34a] transition-colors" onClick={submit} disabled={busy || !reason.trim()}>{busy ? "..." : t("btn.confirm") || "Confirm Override"}</button>
         </div>
       </div>
