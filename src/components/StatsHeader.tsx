@@ -82,7 +82,10 @@ export default function StatsHeader({ oversight }: { oversight: any }) {
         {/* Card 4: Avg Response Time */}
         <div className="bg-[#121820] border border-[#2d3b4a] rounded-xl p-4 flex flex-col justify-between hover:border-[#3b82f6] transition-colors relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity text-4xl text-[#3b82f6]">⏱️</div>
-          <div className="text-xs text-[var(--muted)] font-bold uppercase tracking-wider mb-2">Avg Response Time</div>
+          <div className="text-xs text-[var(--muted)] font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+            Avg Response Time
+            <span className="bg-amber-900/40 text-amber-200 text-[9px] px-1.5 py-0.5 rounded border border-amber-700/50" title="Simulated metric for demo">DEMO</span>
+          </div>
           <div className="text-3xl font-black text-[#3b82f6]">
             {avgResponseTime}
           </div>

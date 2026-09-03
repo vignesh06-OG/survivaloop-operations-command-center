@@ -182,7 +182,7 @@ export class AppService {
         return acc;
       }, {}),
       alertCounts: counts,
-      totalTrees: clusters.length * 50,
+      totalTrees: this.repo.listTrees(orgId).length,
       criticalCount: mappedDecisions.filter(d => d.decision === 'ACT' && (d.sla === 'CRITICAL' || d.sla === 'EXPIRED')).length,
       completedToday: tasks.filter(t => ['COMPLETED', 'PROOF_SUBMITTED', 'VERIFIED'].includes(t.state as string) && (t.updated_at as number) > Date.now() - 86400000).length,
       avgResponseTime: "4h 23m",

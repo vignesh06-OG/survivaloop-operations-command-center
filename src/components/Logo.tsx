@@ -9,9 +9,9 @@ export function Logo({ variant = "header", className, ...props }: LogoProps) {
   const isLogin = variant === "login";
 
   // Dimensions based on variant
-  const width = isIcon ? 32 : isLogin ? 220 : 140;
+  const width = isIcon ? 32 : isLogin ? 220 : 180;
   const height = isIcon ? 32 : isLogin ? 70 : 40;
-  const viewBox = isIcon ? "0 0 32 32" : "0 0 140 40";
+  const viewBox = isIcon ? "0 0 32 32" : "0 0 180 40";
 
   return (
     <div className={`inline-flex flex-col items-center justify-center ${className || ""}`}>
