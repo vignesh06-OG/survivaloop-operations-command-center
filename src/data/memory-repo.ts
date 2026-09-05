@@ -263,10 +263,12 @@ export class MemoryRepo implements Partial<Repo> {
     this.tables.sla_events.push(e);
   }
   createProof(p: DbRow): void {
+    this.autoHydrate();
     if (!this.tables.execution_proofs) this.tables.execution_proofs = [];
     this.tables.execution_proofs.push(p);
   }
   getProof(id: string): DbRow | null {
+    this.autoHydrate();
     return (this.tables.execution_proofs || []).find(p => p.id === id) || null;
   }
   updateProof(id: string, updates: Partial<DbRow>): void {
@@ -274,12 +276,15 @@ export class MemoryRepo implements Partial<Repo> {
     if (p) Object.assign(p, updates);
   }
   findProofBySubmission(workerId: string, submissionId: string): DbRow | null {
+    this.autoHydrate();
     return (this.tables.execution_proofs || []).find(p => p.worker_id === workerId && p.submission_id === submissionId) || null;
   }
   listProofsForTask(taskId: string): DbRow[] {
+    this.autoHydrate();
     return (this.tables.execution_proofs || []).filter(p => p.task_id === taskId).sort((a, b) => new Date(a.submitted_at as string).getTime() - new Date(b.submitted_at as string).getTime());
   }
   findTaskByDecision(orgId: string, decisionId: string): DbRow | null {
+    this.autoHydrate();
     return this.tables.tasks.find(t => t.org_id === orgId && t.decision_id === decisionId) || null;
   }
   markDecisionOverridden(id: string): void {
@@ -287,6 +292,7 @@ export class MemoryRepo implements Partial<Repo> {
     if (d) d.overridden = 1;
   }
   createOverride(o: DbRow): void {
+    this.autoHydrate();
     if (!this.tables.overrides) this.tables.overrides = [];
     this.tables.overrides.push(o);
   }
@@ -314,6 +320,7 @@ export class MemoryRepo implements Partial<Repo> {
     return (this.tables.audit_logs || []).filter(a => a.entity_level === entityLevel && a.entity_id === id);
   }
   listTasksAssignedTo(orgId: string, workerId: string): DbRow[] {
+    this.autoHydrate();
     return this.tables.tasks.filter(t => t.org_id === orgId && (t.assigned_worker_ids_json as string || "").includes(workerId));
   }
   updateTaskState(id: string, state: string): void {

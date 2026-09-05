@@ -3,7 +3,7 @@ import { requireCapability, handleError } from "@/server/request";
 import { ensureSimulation, getCtx } from "@/server/context";
 import { overrideInputCoreSchema } from "@/domain/validation-schema";
 
-/** POST /api/override — supervisor override; reason is REQUIRED (server-side). */
+/** POST /api/override ?" supervisor override; reason is REQUIRED (server-side). */
 export async function POST(req: Request) {
   try {
     ensureSimulation();
@@ -20,3 +20,5 @@ export async function POST(req: Request) {
     return handleError(e);
   }
 }
+
+export const dynamic = "force-dynamic";

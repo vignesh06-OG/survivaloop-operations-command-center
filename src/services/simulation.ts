@@ -71,6 +71,9 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
     });
     return { id, email, role };
   };
+
+  let idCounter = 0;
+  const dId = (prefix: string) => `${prefix}_sim_${seed}_${idCounter++}`;
   const users = [
     makeUser("demo-admin", "Demo Admin", "admin@survivaloop.demo", "ADMIN", 0),
     makeUser("demo-supervisor", "Demo Supervisor", "supervisor@survivaloop.demo", "SUPERVISOR", 50),
@@ -99,7 +102,7 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
   // observable. Exactly one EMERGENCY watering can be committed; a second
   // urgent ACT must DEFER/ESCALATE. This is the core demo innovation.
   repo.insertCapacitySnapshot({
-    id: newId(), org_id: ORG, time: NOW_BASE,
+    id: dId("cap"), org_id: ORG, time: NOW_BASE,
     worker_hours: 8, water_units: 10, vehicles: 1, available_workers: 2,
     committed_worker_hours: 0, committed_water_units: 0, committed_vehicles: 0, committed_workers: 0,
   });
@@ -141,7 +144,7 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
 
   // ---- evidence + references ----
   const ev = (entity: { level: string; id: string }, type: string, source: string, observedAt: number, isSimulated = true, loc?: { lat: number; lng: number }, verification = "PENDING") => {
-    const id = newId();
+    const id = dId("ev");
     repo.createEvidence({
       id, org_id: ORG, entity_level: entity.level, entity_id: entity.id,
       source, evidence_type: type, signal: signalForType(type as any), implied_severity: severityForType(type as any),
@@ -215,7 +218,7 @@ export function buildSimulation(repo: Repo, opts: SimOptions): SimResult {
 
   // --- Seed explicitly requested open field tasks for demo-worker ---
   if (opts.seedDemoTasks) {
-    const tId = () => newId();
+    const tId = () => dId("tsk");
     const cLat = centralRow.lat as number;
     const cLng = centralRow.lng as number;
     const seedTask = (id: string, state: string, intId: string) => {

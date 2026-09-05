@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser, handleError, HttpError } from "@/server/request";
+import { requireUser, requireCapability, handleError, HttpError } from "@/server/request";
 import { ensureSimulation, getCtx } from "@/server/context";
 import { canAccessTask, roleHas } from "@/domain/permissions";
 
@@ -57,7 +57,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     ensureSimulation();
-    const user = await requireUser();
+    const user = await requireCapability("create_task");
     const body = await req.json().catch(() => ({}));
     const app = getCtx().app;
 

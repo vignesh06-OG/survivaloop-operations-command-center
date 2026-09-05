@@ -15,10 +15,11 @@ function FieldViewInner() {
   const { t, lang, speechCode } = useTranslation();
   const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tasks, setTasks] = useState<TaskView[]>([]);
+  const [tasks, setTasks] = useState<FieldTaskView[]>([]);
   const [isOnline, setIsOnline] = useState(true);
   const [activeTab, setActiveTab] = useState<"tasks" | "rewards">("tasks");
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -47,7 +48,7 @@ function FieldViewInner() {
       setMe(m.user);
       
       try {
-        const ts = await api<TaskView[]>("/api/tasks");
+        const ts = await api<FieldTaskView[]>("/api/tasks");
         const activeTasks = ts.filter(t => !["PROOF_SUBMITTED", "VERIFIED", "REJECTED", "EXPIRED", "CANCELLED"].includes(t.state));
         setTasks(activeTasks.sort((a, b) => b.created_at - a.created_at));
 
@@ -96,8 +97,8 @@ function FieldViewInner() {
   if (loading) return <div className="min-h-screen bg-black grid place-items-center text-xl text-white">Loading…</div>;
   if (!me || me.role !== "FIELD_WORKER") return <Login onAuthed={refresh} />;
 
-  // Display the first task in the queue
-  const activeTask = tasks[0];
+  // Display the active task or the list
+  const activeTask = tasks.find(t => t.id === selectedTaskId) || null;
 
   return (
     <div className="min-h-screen bg-black text-[#e6edf3] flex flex-col max-w-md mx-auto relative overflow-hidden">
@@ -134,7 +135,7 @@ function FieldViewInner() {
       {/* TABS */}
       <div className="flex border-b border-[var(--line)] bg-[#0b0f14]">
         <button 
-          onClick={() => setActiveTab("tasks")} 
+          onClick={() => { setActiveTab("tasks"); setSelectedTaskId(null); }} 
           className={`flex-1 py-3 text-sm font-bold border-b-2 ${activeTab === 'tasks' ? 'border-[#34d399] text-[#34d399]' : 'border-transparent text-[var(--muted)]'}`}
         >
           My Tasks
@@ -149,8 +150,8 @@ function FieldViewInner() {
       
       {/* TASK CARD OR EMPTY STATE */}
       {activeTab === "tasks" ? (
-        <div className="flex-1 flex flex-col p-4 overflow-y-auto">
-          {!activeTask ? (
+        <div className="flex-1 flex flex-col p-4 overflow-y-auto pb-24">
+          {tasks.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
               <div className="text-6xl animate-bounce">🎉</div>
               <h2 className="text-2xl font-bold text-[#34d399]">{t("field.allTasksDone") || "All tasks complete for today"}</h2>
@@ -175,8 +176,33 @@ function FieldViewInner() {
                 Load Demo Tasks
               </button>
             </div>
+          ) : activeTask ? (
+            <div className="flex-1 flex flex-col min-h-full">
+              <button className="mb-4 text-[#34d399] font-bold self-start flex items-center gap-2" onClick={() => setSelectedTaskId(null)}>← {t("field.backToList") || "Back to list"}</button>
+              <TaskCard task={activeTask} onNext={() => { refresh(); setSelectedTaskId(null); }} lang={lang} isOnline={isOnline} />
+            </div>
           ) : (
-            <TaskCard task={activeTask} onNext={() => refresh()} lang={lang} isOnline={isOnline} />
+            <div className="space-y-4 flex-1">
+              <div className="bg-gradient-to-r from-[#34d399]/20 to-blue-500/20 border border-[#34d399]/30 rounded-xl p-4 text-center shadow-lg">
+                <p className="font-bold text-white text-lg drop-shadow-md">✨ {t("field.motivationalBanner") || "Keep up the great work! Every action counts."}</p>
+              </div>
+              {tasks.slice(0, 10).map((t) => {
+                const icon = getTaskIcon(t.type, t.intervention_class_id);
+                const typeLabel = t.type === "WATER" ? "Water" : t.type === "INSPECT" ? "Inspect" : t.type === "REPAIR" ? "Repair" : "Task";
+                return (
+                  <div key={t.id} onClick={() => setSelectedTaskId(t.id)} className="p-4 bg-[#1a232f] rounded-xl border border-[var(--line)] cursor-pointer active:scale-95 transition-transform flex items-center justify-between shadow-md">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">{t.entityName || t.entity_id}</h3>
+                      <p className="text-sm text-[#34d399] mt-1">{t.title || `${typeLabel} operations`}</p>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <div className="text-3xl">{icon}</div>
+                      <div className="text-xs font-bold text-yellow-400 mt-2">⭐ +{(t.type === "WATER" ? 10 : t.type === "INSPECT" ? 5 : 15)}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       ) : (
@@ -208,8 +234,18 @@ function FieldViewInner() {
           </div>
         </div>
       )}
+      
+      <BottomNav role="FIELD_WORKER" />
     </div>
   );
+}
+
+export function getTaskIcon(type?: string, ic?: string) {
+  if (type === "WATER" || (ic && ic.includes("WATER"))) return "💧";
+  if (type === "INSPECT" || (ic && ic.includes("INSPECT"))) return "🔍";
+  if (type === "REPAIR" || (ic && (ic.includes("PRUNE") || ic.includes("REPAIR")))) return "🛠️";
+  if (ic && ic.includes("PLANT")) return "🌱";
+  return "📋";
 }
 
 // Updated TaskView definition to match API
@@ -229,6 +265,10 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: FieldTaskView; onNex
   const [localState, setLocalState] = useState(task.state);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // Report problem modal
+  const [reportProblem, setReportProblem] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+
   // Evidence state
   const [note, setNote] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
@@ -236,14 +276,7 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: FieldTaskView; onNex
   const recognitionRef = useRef<any>(null);
 
   // Derive task icon based on type (provided by API) or fallback
-  const getIcon = (type?: string, ic?: string) => {
-    if (type === "WATER" || (ic && ic.includes("WATER"))) return "💧";
-    if (type === "INSPECT" || (ic && ic.includes("INSPECT"))) return "🔍";
-    if (type === "REPAIR" || (ic && (ic.includes("PRUNE") || ic.includes("REPAIR")))) return "🛠️";
-    if (ic && ic.includes("PLANT")) return "🌱";
-    return "📋";
-  };
-  const icon = getIcon(task.type, task.intervention_class_id);
+  const icon = getTaskIcon(task.type, task.intervention_class_id);
   const typeLabel = task.type === "WATER" ? "Water" : task.type === "INSPECT" ? "Inspect" : task.type === "REPAIR" ? "Repair" : "Task";
   const distance = Math.floor(Math.random() * 800) + 100; // Mock distance for UI
   const points = task.type === "WATER" ? 10 : task.type === "INSPECT" ? 5 : 15;
@@ -292,7 +325,18 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: FieldTaskView; onNex
     }
   };
 
-
+  const handleReportSubmit = async () => {
+    setBusy(true); setError(null);
+    try {
+      await api(`/api/tasks/${task.id}`, { method: "PATCH", body: { to: "ESCALATED", reason: reportReason || "Unspecified problem reported from field" } });
+      setReportProblem(false);
+      onNext();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const toggleListen = () => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
@@ -442,12 +486,30 @@ function TaskCard({ task, onNext, lang, isOnline }: { task: FieldTaskView; onNex
           {busy ? t("field.wait") || "Wait..." : t("field.completeTask") || "COMPLETE TASK"}
         </button>
 
-        <button className="w-full py-4 bg-transparent border border-red-500/50 text-red-500 text-sm font-bold rounded-xl active:bg-red-950 transition-colors flex items-center justify-center gap-2">
+        <button onClick={() => setReportProblem(true)} className="w-full py-4 bg-transparent border border-red-500/50 text-red-500 text-sm font-bold rounded-xl active:bg-red-950 transition-colors flex items-center justify-center gap-2">
           {t("field.reportProblem") || "Report a Problem"}
         </button>
       </div>
-      
-      <BottomNav role="FIELD_WORKER" />
+
+      {reportProblem && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[60] animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-[#1a232f] border border-[var(--line)] p-6 rounded-2xl w-full max-w-sm shadow-2xl">
+            <h3 className="text-xl font-black text-white mb-4">{t("field.reportProblem") || "Report a Problem"}</h3>
+            <textarea 
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              placeholder={t("field.reportReason") || "What is the issue?"}
+              className="w-full p-4 bg-[#0b0f14] border border-[var(--line)] rounded-xl text-lg text-white focus:border-red-500 outline-none mb-6 min-h-[100px] resize-none"
+            />
+            <div className="flex gap-4">
+              <button disabled={busy} onClick={() => setReportProblem(false)} className="flex-1 py-4 bg-[#2d3b4a] text-white font-bold rounded-xl active:scale-95 transition-transform">Cancel</button>
+              <button disabled={busy} onClick={handleReportSubmit} className="flex-1 py-4 bg-red-600 text-white font-bold rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.5)] active:scale-95 transition-transform">
+                {busy ? t("field.wait") || "Wait..." : t("field.submitReport") || "Submit"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

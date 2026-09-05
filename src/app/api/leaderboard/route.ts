@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { getCtx } from "@/server/context";
-import { verifySession } from "@/services/auth";
-import { cookies } from "next/headers";
+import { sessionFromRequest } from "@/server/request";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(req: Request) {
   try {
-    const token = cookies().get("survivaloop_session")?.value;
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const user = await verifySession(token);
+    const user = await sessionFromRequest();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
